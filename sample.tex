@@ -690,6 +690,19 @@ axiom libcrux_hmac.hmac_sha256_tag32_spec ...
     \end{itemize}
 \end{frame}
 
+\begin{frame}{Cross-Model Review for Specification Writing}
+\begin{itemize}
+\item AI can generate specifications, but these specifications may contain errors.
+
+\item Complement manual review with independent reviews by different AI models.
+\item This approach is particularly useful for less critical specifications.
+\item Examples include helper lemmas and functions outside the public API.
+\item In my experience, having different AI models independently check the same
+      specification is highly effective at finding errors and omissions.
+\end{itemize}
+
+\end{frame}
+
 \begin{frame}{Clarity of AI-Generated Explanations}
     \begin{itemize}
         \item Despite its capabilities, AI still requires human guidance.
@@ -781,6 +794,101 @@ axiom libcrux_hmac.hmac_sha256_tag32_spec ...
     Round design shown here: reset after every summary. The harness also supports session continuation.
 \end{frame}
 
+% Completed run documented in auto_verify_dalek/meet.md.
+% Proof: ledger/transcripts/.proof-state-dag_scalar_invert_dynamic_01_32-8d43bea2-b4af-4a1c-809e-b828caf40bb0/
+% round-1-draft/files/Curve25519Dalek/Specs/Scalar/Scalar/Invert.lean.
+\begin{frame}[fragile]{Auto-Specifying Dalek: Scalar Inversion Proved}
+    \small
+    \textbf{Fixed API guarantee:} for input $x \not\equiv 0 \pmod{\ell}$,
+    \texttt{Scalar.invert} succeeds and returns $y$ with $xy \equiv 1 \pmod{\ell}$.
+    {\footnotesize Here $x,y$ decode the scalar bytes; $\ell$ is the scalar modulus.}
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.63\textwidth}
+            \begin{block}{The Final Top-Level Proof}
+\begin{lstlisting}[basicstyle=\ttfamily\fontsize{7}{8}\selectfont,escapeinside={(*@}{@*)}]
+  unfold invert
+  progress as (*@$\langle$@*)s, hs, hsb(*@$\rangle$@*)
+  progress as (*@$\langle$@*)r, hrb, hrL, _hpow, hinv(*@$\rangle$@*)
+  progress as (*@$\langle$@*)p, _hp1, hp(*@$\rangle$@*)
+  have hL : _root_.L < 2 ^ 256 := by
+    unfold _root_.L; norm_num
+  rw [hp (by omega), (*@$\leftarrow$@*) hs]
+  exact hinv (by rw [hs]; exact h)
+\end{lstlisting}
+            \end{block}
+        \end{column}
+        \begin{column}{0.34\textwidth}
+            \begin{block}{What the Three Steps Use}
+                \footnotesize
+                \textbf{Unpack:} bytes to limbs.\\[4pt]
+                \textbf{Invert:} apply the internal modular-inverse guarantee.\\[4pt]
+                \textbf{Pack:} limbs back to bytes.
+            \end{block}
+        \end{column}
+    \end{columns}
+    \medskip
+    \footnotesize
+    \textbf{Completed run:} 31 proof nodes: 30 internal nodes + the fixed API spec.\\[3pt]
+    \textbf{Validation:} original top-level statement preserved;
+    no \texttt{sorry} dependencies in the final proof.
+\end{frame}
+
+% Illustrative checkpoint using the actual Scalar52.invert proof dependencies.
+% Scheduling and gates: auto_verify_dalek/harness/dynamic_proof.py and driver.py.
+\begin{frame}{Harness Example: Select a Node and Prove It}
+    \footnotesize
+    \textbf{Target:} \texttt{Scalar.invert\_spec}. Example checkpoint; selected dependencies shown.
+    \begin{center}
+    \begin{tabular}{@{}lll@{}}
+        \toprule
+        Node & Status & Scheduling decision \\
+        \midrule
+        \texttt{as\_montgomery\_spec} & Accepted & Reuse its guarantee \\
+        \texttt{montgomery\_invert\_spec} & Accepted & Reuse its guarantee \\
+        \texttt{from\_montgomery\_spec} & Accepted & Reuse its guarantee \\
+        \texttt{Scalar52.invert\_spec} & Pending & \textbf{Ready: select this node} \\
+        \texttt{Scalar.invert\_spec} & Pending & Wait for internal inversion \\
+        \bottomrule
+    \end{tabular}
+    \end{center}
+    \textbf{Selection rule:} choose a pending node only when all its dependencies are accepted.
+    \begin{block}{Inside the Selected Node's Proof}
+        \begin{enumerate}
+            \item Specify limb bounds, $r<\ell$, and $r \equiv x^{\ell-2} \pmod{\ell}$.
+            \item Unfold; use \texttt{progress} for the three accepted specs above.
+            \item Prove the Montgomery round trip; for $x \not\equiv 0 \pmod{\ell}$,
+                  use Fermat to derive $xr \equiv 1 \pmod{\ell}$.
+        \end{enumerate}
+    \end{block}
+    \textbf{Check incrementally:} compile each helper, then the node; submit to the gate.
+\end{frame}
+
+\begin{frame}{Harness Example: What Makes the Gate Accept?}
+    \footnotesize
+    \textbf{Candidate:} the new \texttt{Scalar52.invert\_spec} and its helper proofs.
+    \begin{center}
+    \begin{tabular}{@{}p{0.20\textwidth}p{0.75\textwidth}@{}}
+        \toprule
+        Check & What the harness confirms \\
+        \midrule
+        Edit scope & Only permitted spec/helper files changed; implementation remains frozen. \\[2pt]
+        Lean build & Definitions, statements, and proof terms check successfully. \\[2pt]
+        Statement identity & Frozen declarations retain their fingerprints, including the supplied API spec. \\[2pt]
+        Proof dependencies & No forbidden new axioms; no disallowed \texttt{sorryAx} in the theorem's transitive dependencies. \\
+        \bottomrule
+    \end{tabular}
+    \end{center}
+    \textbf{Example rejection:} a helper still contains \texttt{sorry}. Lean may compile the file,
+    but the dependency check rejects the candidate if that helper is outside the allowed Math assumptions.
+    \begin{block}{After All Checks Pass}
+        Mark the node \texttt{accepted}, commit its proof, and save gate evidence in the graph.
+        Once \texttt{unpack}, internal inversion, and \texttt{pack} are accepted,
+        the public \texttt{Scalar.invert\_spec} becomes ready.
+    \end{block}
+    \textbf{Final gate:} publish only after every node and the final joint checks pass.\\[2pt]
+    \textbf{For this successful run:} the final API proof has no \texttt{sorry} dependencies.
+\end{frame}
+
 \subsection{Lessons}
 
 \begin{frame}{A Simple Harness Can Be Effective}
@@ -794,27 +902,17 @@ axiom libcrux_hmac.hmac_sha256_tag32_spec ...
 
 \end{frame}
 
-\begin{frame}{Decompose Difficult Proofs and Check Incrementally}
+\begin{frame}{Decompose Proofs and Check Incrementally}
     \begin{itemize}
         \item Initial attempts to prove \texttt{to\_bytes} were unsuccessful.
         \item The \texttt{to\_bytes} implementation exceeds 700 lines of code, and proof attempts frequently time out.
         \item The key improvement was to decompose complex theorems into simpler lemmas.
         \item Make a small change, then check it with Lean.
+        \item I think huge auto-formlaization project such as FLT can be completed like this.
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Cross-Model Review for Specification Writing}
-\begin{itemize}
-\item AI can generate specifications, but these specifications may contain errors.
 
-\item Complement manual review with independent reviews by different AI models.
-\item This approach is particularly useful for less critical specifications.
-\item Examples include helper lemmas and functions outside the public API.
-\item In my experience, having different AI models independently check the same
-      specification is highly effective at finding errors and omissions.
-\end{itemize}
-
-\end{frame}
 
 
 %------------------------------------------------
