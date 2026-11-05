@@ -11,6 +11,7 @@
 
 \usepackage{hyperref}
 \usepackage{graphicx} % Allows including images
+\usepackage{qrcode}
 \usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
 
 % Introduce each section with a roadmap highlighting the section ahead.
@@ -30,7 +31,7 @@
 %----------------------------------------------------------------------------------------
 
 \title[AI Meets Formal Verification]{AI Meets Formal Verification: Practice and Prospects} % The short title appears at the bottom of every slide, the full title is only on the title page
-\subtitle{Subtitle}
+% \subtitle{Subtitle}
 
 \author[Pin-Yen] {Liao Zhang}
 
@@ -38,7 +39,8 @@
 {
     Beneficial AI Foundation \\
 }
-\date{\today} % Date, can be changed to a custom date
+% \date{\today} % Date, can be changed to a custom date
+\date{Novermeber 6, 2026} % Date, can be changed to a custom date
 
 
 %----------------------------------------------------------------------------------------
@@ -57,19 +59,62 @@
     \tableofcontents
 \end{frame}
 
+\begin{frame}{Self introduction}
+    \begin{itemize}
+        \item A research scientist at beneficial AI foundation.
+        \item Work on AI for formal verification since 2018.
+        \item PhD from University of Innsbruck, Austria
+        \item Focus on AI for math and coding
+        % \item The first to use AI to generate explicit rules about how to apply tactics
+        % \item The first to apply AI for term rewriting
+        % \item Build the first comprehensive benchmark on property based testing for codeing agents
+    \end{itemize}
+\end{frame}
+
 %------------------------------------------------
+\begin{frame}{Self Introduction: Selected Research}
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{AI for Term Rewriting}
+                \small The first to apply AI for term rewriting and prove the largest number of problems in annual confluence competition.
+            \end{block}
+            \medskip
+            \includegraphics[width=\linewidth]{img/aaai.png}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Interpretable Tactic Prediction}
+                \small Learning explicit rules that explain tactic predictions in interactive theorem proving.
+            \end{block}
+            \medskip
+            \includegraphics[width=\linewidth]{img/ijclr.png}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Self Introduction: Selected Research}
+    \begin{block}{Evaluating AI Agents on Property-Based Testing}
+        \small From documentation to semantic invariants and input-generation strategies that reveal bugs.
+    \end{block}
+    \medskip
+    \centering
+    \includegraphics[width=0.78\textwidth,height=0.58\textheight,keepaspectratio]{img/pbt-bench.png}
+\end{frame}
+
 \section{Background: Beneficial AI Foundation and Signal Shot}
 %------------------------------------------------
 
 \begin{frame}{Beneficial AI Foundation}
+    \begin{columns}[c,onlytextwidth]
+    \begin{column}{0.70\textwidth}
+    \small
     \begin{block}{Mission}
         Keep AI beneficial for humanity through technical AI safety research.
     \end{block}
     \begin{itemize}
-        \item Founded by Max Tegmark in 2022.
-        \item Supports research through an in-house team, fellowships, and university partnerships.
-        \item Research interests include red-teaming, interpretability, and guaranteed safe AI.
-        \item For this talk, the focus is \textbf{AI-assisted formal verification}: using AI to help build software with machine-checked guarantees.
+        \item Founded by Max Tegmark.
+        \item AI is unsafe, what should we do?
+        \item Main approach:
+        AI generates program and verify the correctness and safety of the program. Then use the program to reply to the user instead of using AI.
     \end{itemize}
     \medskip
     \footnotesize
@@ -77,8 +122,22 @@
     \medskip
 
     \scriptsize
-    Sources: \href{https://www.beneficialaifoundation.org/main}{Beneficial AI Foundation};
-    \href{https://www.beneficialaifoundation.org/signal-shot}{Signal Shot}.
+    % Sources: \href{https://www.beneficialaifoundation.org/main}{Beneficial AI Foundation};
+    % \href{https://www.beneficialaifoundation.org/signal-shot}{Signal Shot}.
+    \end{column}
+    \begin{column}{0.26\textwidth}
+        \centering
+        \includegraphics[width=\linewidth,height=3.8cm,keepaspectratio]{img/max-tegmark.jpg}
+        \smallskip
+
+        {\small\textbf{Max Tegmark}\par}
+        \smallskip
+        {\tiny Photo: \href{https://commons.wikimedia.org/wiki/File:Max_Tegmark_01.jpg}{Bengt Oberger / Wikimedia Commons}\par
+        % \href{https://creativecommons.org/licenses/by-sa/4.0/}
+        % {CC BY-SA 4.0}\par
+        }
+    \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{What Is Signal?}
@@ -138,25 +197,24 @@
 % Functional translation: https://arxiv.org/abs/2206.07185
 % Project overview: SparsePostQuantumRatchet-verify/README.md and src/lib.rs;
 % src/incremental_mlkem768.rs; Spqr/Specs/Braid/Scka/EpochUniqueness.lean.
-\begin{frame}{SPQR: What It Does and What We Verify}
+\begin{frame}{SPQR: A Key-Updating Component of Signal}
     \small
+    \textbf{SPQR = Sparse Post-Quantum Ratchet}
     \begin{itemize}
-        \item \textbf{What is it?} SPQR (Sparse Post-Quantum Ratchet) is Signal's Rust implementation of a post-quantum ratchet for secure messaging.
-        \item \textbf{What does it do?} It uses incremental ML-KEM-768 exchanges to generate fresh shared secrets for updating messaging keys.
-        \item \textbf{Why sparse?} Key-exchange data is carried in chunks across messages; a new shared secret need not be produced for every message.
+        \item \textbf{The protocol:} a component of Signal that updates encryption keys during a conversation, designed to resist quantum attacks.
+        \item \textbf{The code:} Signal also provides a Rust library implementing SPQR. This is the software we study.
+        \item \textbf{Why ``sparse''?} The data needed for a fresh post-quantum key update is spread across multiple messages.
     \end{itemize}
-    \begin{block}{Our Verification Project}
-        Use Aeneas and Lean to establish functional properties of the Rust implementation:
-        chunk encoding and decoding, message serialization, ratchet state transitions,
-        and epoch management.
-    \end{block}
-    \footnotesize
-    \textbf{Example guarantee:} along one participant's successful state-machine run,
-    at most one key is emitted per epoch, and emitted epochs strictly increase.
     \medskip
-
-    These implementation-level results depend on stated assumptions and external models;
-    they do not constitute a complete cryptographic security proof.
+    \textbf{Intuition:} Alice and Bob keep updating their keys as they exchange messages.
+    \begin{block}{What We Verify}
+        Using Lean, we prove properties of the \textbf{Rust code}: for example,
+        that data is encoded correctly and key-update steps follow their specifications.
+        This is implementation correctness, not a proof of all of Signal's security.
+    \end{block}
+    \scriptsize
+    Sources: \href{https://signal.org/blog/spqr/}{Signal: SPQR overview};
+    \href{https://github.com/signalapp/SparsePostQuantumRatchet}{SPQR Rust implementation}.
 \end{frame}
 
 \begin{frame}{SPQR: From Rust Code to Checked Proofs}
@@ -178,6 +236,21 @@
     \end{tikzpicture}
     \end{center}
 
+    \medskip
+    \begin{enumerate}
+        \item \textbf{Translate:} use Aeneas to turn the Rust implementation into Lean functions.
+        \item \textbf{Specify:} state what those functions should do, including their assumptions.
+        \item \textbf{Prove:} construct proofs that the translated functions satisfy these specifications; Lean checks the proofs.
+    \end{enumerate}
+    \medskip
+    \begin{block}{The Key Distinction}
+        Translation gives us code we can reason about in Lean.
+        Specifications and proofs establish the properties we want to verify.
+    \end{block}
+\end{frame}
+
+\begin{frame}{Aeneas: Translating Rust into Lean}
+    \small
     \textbf{Inside the translation: Rust control flow becomes a functional model}
     \begin{center}
     \begin{tikzpicture}[
@@ -196,15 +269,15 @@
     \end{center}
     \footnotesize
     \begin{itemize}
-        \item \textbf{Extraction:} Charon simplifies MIR to ULLBC, then reconstructs loops and branches into LLBC (Low-Level Borrow Calculus).
+        % \item \textbf{Extraction:} Charon simplifies MIR to ULLBC, then reconstructs loops and branches into LLBC (Low-Level Borrow Calculus).
         \item \textbf{Translation:} Aeneas symbolically executes LLBC, tracking values, borrows, and loans. Mutation becomes explicit value updates in pure functions.
         \item \textbf{Semantic foundation:} formal results relate the borrow-based semantics to a heap-and-address model for the formalized language, not the entire Rust toolchain.
     \end{itemize}
     \medskip
     \scriptsize
-    Sources: \href{https://aeneasverif.github.io/projects/}{Aeneas / Charon documentation};
-    \href{https://arxiv.org/abs/2206.07185}{Functional Translation (2022)};
-    \href{https://arxiv.org/abs/2404.02680}{Symbolic Semantics (2024)}.
+    % Sources: \href{https://aeneasverif.github.io/projects/}{Aeneas / Charon documentation};
+    % \href{https://arxiv.org/abs/2206.07185}{Functional Translation (2022)};
+    % \href{https://arxiv.org/abs/2404.02680}{Symbolic Semantics (2024)}.
 \end{frame}
 
 % Actual example: src/util.rs; SrcTranslated/Funs.lean (util.compare);
@@ -293,6 +366,128 @@ theorem compare_spec (lhs rhs : Slice U8)
     The theorem establishes functional behavior, not constant-time execution.
 \end{frame}
 
+% Concrete examples from /home/zhang-liao/spqr2/SparsePostQuantumRatchet-verify.
+% Encaps1.lean: encaps1_spec; the sketch below omits Lean representation details.
+\begin{frame}[fragile]{SPQR: Reviewing Long Specifications}
+    \small
+    \textbf{Example: \texttt{encaps1}} returns ciphertext, intermediate state, and a shared secret.
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.53\textwidth}
+            \begin{block}{Contract Sketch (Simplified from Lean)}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+Assume: header length >= 64
+  fill_bytes succeeds
+Guarantee: there exists one message m
+  of 32 bytes such that
+  ct1 = ct1List(header, m)
+  es  = stateOut(header, m)
+  ss  = ssOut(header, m)
+Lengths:
+  ct1: 960, es: 2080, ss: 32
+\end{lstlisting}
+            \end{block}
+        \end{column}
+        \begin{column}{0.44\textwidth}
+            \textbf{What must a reviewer check?}
+            \begin{itemize}
+                \item All three outputs use the \emph{same} message \texttt{m}.
+                \item The named model functions describe the intended bytes, not just their sizes.
+                \item Input conditions match actual callers.
+                \item Success of \texttt{fill\_bytes} does not establish uniform randomness.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+    \footnotesize
+    \textbf{Difficulty:} Lean checks the proof of the statement; humans must still check that the statement captures the intended behavior.
+    \par\smallskip
+    \scriptsize Source: \texttt{Spqr/Specs/IncrementalMlkem768/Encaps1.lean}, \texttt{encaps1\_spec}.
+\end{frame}
+
+% Documented review counterexamples, not a claim that the current spec has this bug.
+% doc/AI_PR_REVIEW_QUESTIONS.md, "Specifications must rule out plausible wrong implementations".
+\begin{frame}{SPQR: A True Specification Can Be Too Weak}
+    \small
+    \textbf{Example: garbage collection of stored message keys.}
+    Old keys should be removed while the required live keys are preserved.
+    \begin{block}{A Plausible but Insufficient Specification}
+        ``Every key remaining after cleanup is valid.''
+    \end{block}
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \begin{exampleblock}{Counterexample A: Delete Everything}
+                The output is empty, so every remaining key is valid.
+                The statement holds even though all live keys are lost.
+            \end{exampleblock}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{exampleblock}{Counterexample B: Duplicate a Live Key}
+                Keep one live key twice and lose another.
+                Each remaining entry can still be valid.
+            \end{exampleblock}
+        \end{column}
+    \end{columns}
+    \medskip
+    \textbf{Review obligation:} specify which entries survive and preserve their multiplicity,
+    rather than only checking each output entry in isolation.
+    \medskip
+
+    \footnotesize
+    \textbf{Lesson:} a completed proof cannot repair a missing requirement.
+    \par\smallskip
+    \scriptsize Source: documented review examples in \texttt{doc/AI\_PR\_REVIEW\_QUESTIONS.md}.
+\end{frame}
+
+% Cargo.toml [package.metadata.charon], translation-patches/lib-state_pb.patch.
+\begin{frame}{SPQR: Code Outside the Translation}
+    \small
+    \textbf{Example: serializing the ratchet state with Protobuf (\texttt{prost}).}
+    The project's extraction patch records problems translating the generated \texttt{Message} implementations.
+    \begin{center}
+    \begin{tikzpicture}[
+        stage/.style={draw=MediumBlue,fill=InvisibleBlue,rounded corners=3pt,
+            text width=3.5cm,minimum height=1.05cm,align=center,inner sep=5pt,font=\footnotesize},
+        flow/.style={-{Stealth[length=2mm]},thick,MediumBlue},node distance=0.8cm]
+        \node[stage] (rust) {\textbf{Rust caller}\\Save / load ratchet state};
+        \node[stage,right=of rust] (wrap) {\textbf{Wrapper functions}\\\texttt{encode\_state\_pb}\\\texttt{decode\_state\_pb}};
+        \node[stage,right=of wrap,fill=InvisibleGreen] (external) {\textbf{Lean external interface}\\Opaque to extraction;\\modeled separately};
+        \draw[flow] (rust) -- (wrap);
+        \draw[flow] (wrap) -- (external);
+    \end{tikzpicture}
+    \end{center}
+    \begin{itemize}
+        \item The extraction patch routes calls through wrappers and marks them \texttt{opaque}.
+        \item This lets the surrounding code be translated without translating the \texttt{prost} implementation.
+        \item The extraction configuration also excludes platform-specific SIMD and some generated trait implementations.
+    \end{itemize}
+    \begin{block}{The Extra Verification Obligation}
+        A proof about a handwritten Lean model still needs justification that the external Rust code behaves like that model.
+    \end{block}
+    \scriptsize Sources: \texttt{Cargo.toml}; \texttt{translation-patches/lib-state\_pb.patch}.
+\end{frame}
+
+% SrcTranslated/FunsExternal.lean: libcrux_hmac.hmac_sha256_tag32_spec.
+\begin{frame}[fragile]{SPQR: Reviewing External Assumptions}
+    \small
+    \textbf{Example: the external \texttt{libcrux\_hmac::hmac} call.}
+    \begin{block}{Two Different Declarations in Lean}
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+noncomputable opaque libcrux_hmac.hmac : ...
+axiom libcrux_hmac.hmac_sha256_tag32_spec ...
+\end{lstlisting}
+        \footnotesize Signatures shortened: the external names a function; the axiom assumes its behavior.
+    \end{block}
+    \begin{exampleblock}{What This Axiom Actually Says}
+        For key and data lengths $\leq$ \texttt{u32::MAX}, the SHA-256 HMAC call
+        requesting 32 bytes succeeds and returns 32 bytes.
+    \end{exampleblock}
+    \begin{itemize}
+        \item \textbf{Bounds:} external length conversions to \texttt{u32} can panic.
+        \item \textbf{Scope:} length and success, not the HMAC value or cryptographic security.
+        \item \textbf{Trust:} Lean uses this assumption; downstream proofs depend on it.
+    \end{itemize}
+    \scriptsize Source: \texttt{SrcTranslated/FunsExternal.lean}, \texttt{hmac\_sha256\_tag32\_spec}.
+\end{frame}
+
 % Sources: curve25519-dalek-lean-verify/site/details.md;
 % Curve25519Dalek/Specs/Backend/VariableBaseMul.lean;
 % Curve25519Dalek/Specs/Backend/Serial/U64/Field/FieldElement51/{Mul,ToBytes}.lean.
@@ -318,6 +513,84 @@ theorem compare_spec (lhs rhs : Slice U8)
 \end{frame}
 
 
+% Based on auto_verify_dalek/docs/METHOD.md and
+% harness/prove_top_spec.py / harness/dynamic_proof.py.
+% Illustrative dependency chain, not a claim that this target is completed.
+\begin{frame}{Auto-Specifying Dalek: Bottom-Up Proofs}
+    \small
+    \textbf{1. Human provides and fixes the public API specification.}\\
+    Implementation code stays fixed; AI writes internal specifications and proofs.
+    \begin{center}
+    \begin{tikzpicture}[
+        contract/.style={draw=MediumBlue,rounded corners=3pt,align=center,
+            minimum height=0.7cm,inner sep=5pt,font=\footnotesize},
+        flow/.style={-{Stealth[length=2.5mm]},thick,MediumBlue}]
+        \node[contract,fill=InvisibleBlue,text width=7.2cm] (api) at (0,0)
+            {\textbf{4. Prove the fixed public API specification}\\
+             \texttt{Scalar.invert\_spec} \quad (human-written statement)};
+        \node[contract,fill=InvisibleGreen,text width=7.2cm] (internal) at (0,-1.2)
+            {\textbf{3. AI specifies and proves the internal caller}\\
+             \texttt{Scalar52.invert\_spec}};
+        \node[contract,fill=InvisibleGreen,text width=3.4cm] (mul) at (-4.2,-2.4)
+            {\texttt{montgomery\_mul\_spec}};
+        \node[contract,fill=InvisibleGreen,text width=3.4cm] (to) at (0,-2.4)
+            {\texttt{as\_montgomery\_spec}};
+        \node[contract,fill=InvisibleGreen,text width=3.4cm] (from) at (4.2,-2.4)
+            {\texttt{from\_montgomery\_spec}};
+        \draw[flow] (mul.north) -- (internal.south west);
+        \draw[flow] (to.north) -- (internal.south);
+        \draw[flow] (from.north) -- (internal.south east);
+        \draw[flow] (internal.north) -- (api.south);
+        \node[font=\small,align=center] at (0,-3.15)
+            {\textbf{2. AI writes and proves lower-level specs} (\texttt{Scalar52} helpers)};
+    \end{tikzpicture}
+    \end{center}
+    \footnotesize
+    \textbf{Arrows:} proved dependencies support the caller above; continue from the leaves to the API.\\
+    \textbf{Feedback:} if an internal spec is too weak, revise it and recheck affected proofs.\\
+    \textbf{Final check:} Lean proofs and project gates pass; the supplied API statement stays unchanged.
+\end{frame}
+
+% Conceptual round design requested for this talk: fresh context every round.
+% Current harness/driver.py also supports resumed rounds and conditional resets;
+% dynamic_proof.py implements dependency-ready scheduling in the harness.
+\begin{frame}{Harness: Node Selection and Fresh Rounds}
+    \small
+    \textbf{Main agent:} decide which proof nodes to work on using the dependency graph.
+    \begin{center}
+    \begin{tikzpicture}[
+        stage/.style={draw=MediumBlue,rounded corners=3pt,align=center,
+            text width=3.45cm,minimum height=1.2cm,inner sep=5pt,font=\footnotesize},
+        flow/.style={-{Stealth[length=2.5mm]},thick,MediumBlue}]
+        \node[stage,fill=InvisibleBlue] (select) at (0,0)
+            {\textbf{1. Select nodes}\\Read graph and summary;\\pick ready nodes};
+        \node[stage,fill=InvisibleGreen] (work) at (4.6,0)
+            {\textbf{2. Work on nodes}\\Write internal specs,\\lemmas, and proofs};
+        \node[stage,fill=InvisibleGreen] (check) at (9.2,0)
+            {\textbf{3. Check with Lean}\\Record checked results\\and remaining errors};
+        \node[stage,fill=InvisibleBlue] (reset) at (0,-2.1)
+            {\textbf{6. Start next round}\\Clear context;\\reload saved state};
+        \node[stage,fill=InvisibleBlue] (save) at (4.6,-2.1)
+            {\textbf{5. Save progress}\\Code, proof graph,\\summary, and diagnostics};
+        \node[stage,fill=InvisibleBlue] (summary) at (9.2,-2.1)
+            {\textbf{4. Write summary}\\Done / blocked / failed;\\next steps};
+        \draw[flow] (select) -- (work);
+        \draw[flow] (work) -- (check);
+        \draw[flow] (check) -- (summary);
+        \draw[flow] (summary) -- (save);
+        \draw[flow] (save) -- (reset);
+        \draw[flow] (reset) -- (select);
+    \end{tikzpicture}
+    \end{center}
+    \begin{block}{Progress Lives in Files, Beyond the Conversation}
+        \footnotesize
+        Each round starts fresh, but retains the fixed API goal, code, dependency graph,
+        and concise summaries. Repeat until the API proof and final checks pass.
+    \end{block}
+    \scriptsize
+    Round design shown here: reset after every summary. The harness also supports session continuation.
+\end{frame}
+
 \section{Lessons from Practice}
 
 \begin{frame}{Lessons from Practice}
@@ -336,6 +609,7 @@ theorem compare_spec (lhs rhs : Slice U8)
         \item One year ago, AI struggled to construct challenging proofs.
         \item At that time, proofs involving loop invariants were beyond its capabilities in my experience.
         \item In my recent work, I have not encountered a proof that AI could not complete.
+        \item In most cases, the specifications written by AI is correct.
     \end{itemize}
 \end{frame}
 
@@ -417,95 +691,20 @@ theorem compare_spec (lhs rhs : Slice U8)
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Prospects: Important Directions of AI for formal verification}
-    \begin{itemize}
-        \item Efficient Inference
-        \item Understandable Formal verification
-    \end{itemize}
-\end{frame}
-
-
-\begin{frame}{Specification as a Central Research Challenge}
-    \begin{itemize}
-        \item As proof construction becomes easier, selecting the right statements may require more attention.
-        \item Generate candidate specifications from documentation, interfaces, and intended use cases.
-        \item Make assumptions, boundary conditions, and excluded behaviors explicit.
-        \item Require human review of whether each formal statement captures the intended requirement.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{Evaluating the Strength of Specifications}
-    \begin{itemize}
-        \item Check whether specifications rule out plausible implementation errors.
-        \item Use examples and counterexamples to clarify the behaviors a specification permits.
-        \item Investigate mutation-based evaluation: would an incorrect implementation still satisfy the statement?
-        \item Examine whether assumptions are consistent and whether conclusions provide meaningful guarantees.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{Scaling through Compositional Verification}
-    \begin{itemize}
-        \item Decompose large verification tasks into components with explicit contracts.
-        \item Develop reusable lemmas for recurring patterns, including loops and data conversions.
-        \item Track dependencies between local guarantees and system-level properties.
-        \item Use projects such as Dalek and SPQR to explore how these workflows scale.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{More Effective Agent Coordination}
-    \begin{itemize}
-        \item Maintain a shared record of proof obligations, dependencies, and completed results.
-        \item Assign bounded tasks with clear completion criteria to individual agents.
-        \item Separate specification review from proof construction to encourage independent scrutiny.
-        \item Evaluate whether additional agents justify their coordination and computational costs.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{Human Oversight through Clear Explanations}
-    \begin{itemize}
-        \item Present each result with its formal statement, assumptions, and a concise explanation.
-        \item Explain how the statement corresponds to the original software requirement.
-        \item Highlight unresolved obligations and decisions that require human judgment.
-        \item Treat clarity and review effort as explicit evaluation criteria.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{Verification throughout Software Maintenance}
-    \begin{itemize}
-        \item Integrate proof checking into the development and review workflow.
-        \item Identify which specifications and proofs are affected by implementation changes.
-        \item Explore AI-assisted proof repair while preserving the intended guarantees.
-        \item Review changes to theorem statements and assumptions as carefully as changes to code.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{Evaluating Practical Progress}
-    \begin{itemize}
-        \item Measure completion rates on representative verification tasks.
-        \item Report computational cost, elapsed time, and human intervention.
-        \item Assess specification quality, proof maintainability, and reproducibility.
-        \item Track remaining proof gaps and assumptions alongside successful results.
-        \item Compare simple workflows with more elaborate agent architectures.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{A Proposed Roadmap}
-    \begin{enumerate}
-        \item Establish reproducible workflows for bounded verification tasks.
-        \item Strengthen specification review and build reusable proof libraries.
-        \item Extend verification across component boundaries and software revisions.
-        \item Evaluate sustained use in realistic development settings.
-    \end{enumerate}
-    \medskip
-    \begin{block}{Long-Term Objective}
-        Make rigorous, understandable, and maintainable verification accessible to more developers.
-    \end{block}
-\end{frame}
-
 %------------------------------------------------
 
 \begin{frame}
-    \Huge{\centerline{\textbf{The End}}}
+    \centering
+    {\Huge\textbf{We are hiring}\par}
+    \medskip
+    {\large Beneficial AI Foundation\par}
+    \bigskip
+    \qrcode[height=3cm]{https://www.beneficialaifoundation.org/jobs}
+    \bigskip
+
+    {\small Scan to explore open positions\par}
+    \medskip
+    \href{https://www.beneficialaifoundation.org/jobs}{\footnotesize beneficialaifoundation.org/jobs}
 \end{frame}
 
 %----------------------------------------------------------------------------------------
