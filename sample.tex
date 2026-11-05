@@ -4,6 +4,11 @@
 \documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
 \usetheme{SimplePlus}
 
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\scriptsize,columns=fullflexible,keepspaces=true,showstringspaces=false,aboveskip=3pt,belowskip=3pt}
+
 \usepackage{hyperref}
 \usepackage{graphicx} % Allows including images
 \usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
@@ -12,15 +17,14 @@
 %	TITLE PAGE
 %----------------------------------------------------------------------------------------
 
-\title[short title]{Simple Beamer Theme} % The short title appears at the bottom of every slide, the full title is only on the title page
+\title[AI Meets Formal Verification]{AI Meets Formal Verification: Practice and Prospects} % The short title appears at the bottom of every slide, the full title is only on the title page
 \subtitle{Subtitle}
 
-\author[Pin-Yen] {Pin-Yen Huang}
+\author[Pin-Yen] {Liao Zhang}
 
 \institute[NTU] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
 {
-    Department of Computer Science and Information Engineering \\
-    National Taiwan University % Your institution for the title page
+    Beneficial AI Foundation \\
 }
 \date{\today} % Date, can be changed to a custom date
 
@@ -42,112 +46,420 @@
 \end{frame}
 
 %------------------------------------------------
-\section{First Section}
+\section{Background: Beneficial AI Foundation and Signal Shot}
 %------------------------------------------------
 
-\begin{frame}{Bullet Points}
+\begin{frame}{Beneficial AI Foundation}
+    \begin{block}{Mission}
+        Keep AI beneficial for humanity through technical AI safety research.
+    \end{block}
     \begin{itemize}
-        \item Lorem ipsum dolor sit amet, consectetur adipiscing elit
-        \item Aliquam blandit faucibus nisi, sit amet dapibus enim tempus eu
-        \item Nulla commodo, erat quis gravida posuere, elit lacus lobortis est, quis porttitor odio mauris at libero
-        \item Nam cursus est eget velit posuere pellentesque
-        \item Vestibulum faucibus velit a augue condimentum quis convallis nulla gravida
+        \item Founded by Max Tegmark in 2022.
+        \item Supports research through an in-house team, fellowships, and university partnerships.
+        \item Research interests include red-teaming, interpretability, and guaranteed safe AI.
+        \item For this talk, the focus is \textbf{AI-assisted formal verification}: using AI to help build software with machine-checked guarantees.
+    \end{itemize}
+    \medskip
+    \footnotesize
+    \textbf{Connection to practice:} cryptographic software provides concrete, demanding verification tasks.
+    \medskip
+
+    \scriptsize
+    Sources: \href{https://www.beneficialaifoundation.org/main}{Beneficial AI Foundation};
+    \href{https://www.beneficialaifoundation.org/signal-shot}{Signal Shot}.
+\end{frame}
+
+\begin{frame}{Signal Shot: A Shared Verification Challenge}
+    \small
+    \textbf{Launched in April 2026:} a collaborative initiative to formally verify
+    the Signal protocol and application using Lean.
+    \begin{itemize}
+        \item \textbf{Technical ambition:} work toward machine-checked guarantees across the protocol stack and its implementation.
+        \item \textbf{Engineering ambition:} develop reusable tools for protocol design and continuous verification as software changes.
+        \item \textbf{Community ambition:} bring together Lean, cryptography, software verification, and AI-assisted theorem proving.
+        \item \textbf{Concrete workstreams:} the initiative links verification repositories for libsignal, PQXDH, and SPQR.
+    \end{itemize}
+    \begin{block}{From the Initiative to This Talk}
+        SPQR is our practical case study: writing specifications, constructing Lean proofs,
+        and understanding where AI helps and where human judgment remains essential.
+    \end{block}
+    \scriptsize
+    Source: \href{https://www.beneficialaifoundation.org/signal-shot}{Signal Shot: objectives and project repositories}.
+\end{frame}
+
+%------------------------------------------------
+\section{Practice}
+%------------------------------------------------
+
+
+% Sources: SparsePostQuantumRatchet-verify/README.md;
+% src/encoding/gf.rs; SrcTranslated/Funs.lean;
+% Spqr/Specs/Encoding/Gf/GF16/Mul.lean.
+% Aeneas pipeline: https://aeneasverif.github.io/projects/
+% Semantic foundation: https://arxiv.org/abs/2404.02680
+% Functional translation: https://arxiv.org/abs/2206.07185
+% Project overview: SparsePostQuantumRatchet-verify/README.md and src/lib.rs;
+% src/incremental_mlkem768.rs; Spqr/Specs/Braid/Scka/EpochUniqueness.lean.
+\begin{frame}{SPQR: What It Does and What We Verify}
+    \small
+    \begin{itemize}
+        \item \textbf{What is it?} SPQR (Sparse Post-Quantum Ratchet) is Signal's Rust implementation of a post-quantum ratchet for secure messaging.
+        \item \textbf{What does it do?} It uses incremental ML-KEM-768 exchanges to generate fresh shared secrets for updating messaging keys.
+        \item \textbf{Why sparse?} Key-exchange data is carried in chunks across messages; a new shared secret need not be produced for every message.
+    \end{itemize}
+    \begin{block}{Our Verification Project}
+        Use Aeneas and Lean to establish functional properties of the Rust implementation:
+        chunk encoding and decoding, message serialization, ratchet state transitions,
+        and epoch management.
+    \end{block}
+    \footnotesize
+    \textbf{Example guarantee:} along one participant's successful state-machine run,
+    at most one key is emitted per epoch, and emitted epochs strictly increase.
+    \medskip
+
+    These implementation-level results depend on stated assumptions and external models;
+    they do not constitute a complete cryptographic security proof.
+\end{frame}
+
+\begin{frame}{SPQR: From Rust Code to Checked Proofs}
+    \small
+    \textbf{Target:} functional correctness of Signal's Sparse Post-Quantum Ratchet.
+    \begin{center}
+    \begin{tikzpicture}[
+        stage/.style={draw=MediumBlue,fill=InvisibleBlue,rounded corners=3pt,
+            text width=2.65cm,minimum height=0.75cm,align=center,inner sep=5pt,font=\small},
+        flow/.style={-{Stealth[length=2mm]},thick,MediumBlue},
+        node distance=0.65cm]
+        \node[stage] (rust) {\textbf{Rust code}};
+        \node[stage,right=of rust] (lean) {\textbf{Lean function}};
+        \node[stage,right=of lean] (spec) {\textbf{Specification}};
+        \node[stage,right=of spec] (proof) {\textbf{Checked proof}};
+        \draw[flow] (rust) -- node[above,font=\scriptsize] {Aeneas} (lean);
+        \draw[flow] (lean) -- (spec);
+        \draw[flow] (spec) -- (proof);
+    \end{tikzpicture}
+    \end{center}
+
+    \textbf{Inside the translation: Rust control flow becomes a functional model}
+    \begin{center}
+    \begin{tikzpicture}[
+        ir/.style={draw=MediumBlue,fill=InvisibleGreen,rounded corners=3pt,
+            text width=2.65cm,minimum height=1.2cm,align=center,inner sep=5pt,font=\footnotesize},
+        flow/.style={-{Stealth[length=2mm]},thick,MediumBlue},
+        node distance=0.65cm]
+        \node[ir] (rust) {\textbf{Rust source}\\Borrowing and\\mutation};
+        \node[ir,right=of rust] (mir) {\textbf{MIR}\\Compiler\\intermediate form};
+        \node[ir,right=of mir] (llbc) {\textbf{LLBC}\\Structured IR\\with borrows};
+        \node[ir,right=of llbc] (lean) {\textbf{Pure Lean model}\\Value updates;\\success or failure};
+        \draw[flow] (rust) -- node[above,font=\scriptsize] {rustc} (mir);
+        \draw[flow] (mir) -- node[above,font=\scriptsize] {Charon} (llbc);
+        \draw[flow] (llbc) -- node[above,font=\scriptsize] {Aeneas} (lean);
+    \end{tikzpicture}
+    \end{center}
+    \footnotesize
+    \begin{itemize}
+        \item \textbf{Extraction:} Charon simplifies MIR to ULLBC, then reconstructs loops and branches into LLBC (Low-Level Borrow Calculus).
+        \item \textbf{Translation:} Aeneas symbolically executes LLBC, tracking values, borrows, and loans. Mutation becomes explicit value updates in pure functions.
+        \item \textbf{Semantic foundation:} formal results relate the borrow-based semantics to a heap-and-address model for the formalized language, not the entire Rust toolchain.
+    \end{itemize}
+    \medskip
+    \scriptsize
+    Sources: \href{https://aeneasverif.github.io/projects/}{Aeneas / Charon documentation};
+    \href{https://arxiv.org/abs/2206.07185}{Functional Translation (2022)};
+    \href{https://arxiv.org/abs/2404.02680}{Symbolic Semantics (2024)}.
+\end{frame}
+
+% Actual example: src/util.rs; SrcTranslated/Funs.lean (util.compare);
+% Spqr/Specs/Util/Compare.lean. Translation excerpts shorten namespaces.
+\begin{frame}[fragile]{SPQR Example: A Byte Comparison Loop}
+    \lstset{basicstyle=\ttfamily\fontsize{7}{8}\selectfont}
+    \small
+    Compare two byte slices by accumulating differences with bitwise XOR and OR.
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.44\textwidth}
+            \begin{block}{Rust: Mutation and a \texttt{for} Loop}
+\begin{lstlisting}
+fn compare(lhs: &[u8], rhs: &[u8]) -> u8 {
+    let mut r: u8 = 0;
+    for i in 0..lhs.len() {
+        r |= lhs[i] ^ rhs[i];
+    }
+    is_non_zero(r)
+}
+\end{lstlisting}
+            \end{block}
+            \footnotesize
+            \texttt{is\_non\_zero(r)} returns 0 if $r=0$, and 1 otherwise.
+        \end{column}
+        \begin{column}{0.53\textwidth}
+            \begin{block}{Lean: Explicit State and \texttt{Result}}
+\begin{lstlisting}[literate={←}{{$\leftarrow$}}1 {«}{{{\fontencoding{T1}\selectfont\guillemotleft}}}1 {»}{{{\fontencoding{T1}\selectfont\guillemotright}}}1]
+def compare (lhs rhs : Slice U8) : Result U8 := do
+  let n := Slice.len lhs
+  let r ← compare_loop
+    { start := 0#usize, «end» := n } lhs rhs 0#u8
+  is_non_zero r
+\end{lstlisting}
+                \footnotesize Loop body at index \texttt{i} (names shortened):
+\begin{lstlisting}[literate={←}{{$\leftarrow$}}1 {«}{{{\fontencoding{T1}\selectfont\guillemotleft}}}1 {»}{{{\fontencoding{T1}\selectfont\guillemotright}}}1]
+let a ← Slice.index_usize lhs i
+let b ← Slice.index_usize rhs i
+let d ← lift (a ^^^ b)
+let r1 ← lift (r ||| d)
+ok (cont (iter1, r1))
+\end{lstlisting}
+            \end{block}
+        \end{column}
+    \end{columns}
+    \footnotesize
+    \begin{tabular}{@{}p{0.27\textwidth}p{0.68\textwidth}@{}}
+        \textbf{Rust construct} & \textbf{Lean representation} \\\midrule
+        \texttt{\&[u8]} & \texttt{Slice U8}: a borrowed byte slice becomes a value. \\
+        \texttt{let mut r}; \texttt{for} & \texttt{loop} threads state \texttt{(iter, r)}; \texttt{cont} continues, \texttt{done} exits. \\
+        \texttt{lhs[i]} & \texttt{Slice.index\_usize}: a checked access in \texttt{Result}; failure propagates. \\
+    \end{tabular}
+\end{frame}
+
+\begin{frame}[fragile]{SPQR Example: Specification and Proof}
+    \lstset{basicstyle=\ttfamily\fontsize{7}{8}\selectfont}
+    \begin{block}{Specification and Top-Level Proof (\texttt{compare\_spec})}
+\begin{lstlisting}[literate={⦃}{{$\lbrace\!\lbrace$}}1 {⦄}{{$\rbrace\!\rbrace$}}1 {∀}{{$\forall$}}1 {→}{{$\to$}}1 {=>}{{$\Rightarrow$}}2]
+theorem compare_spec (lhs rhs : Slice U8)
+    (hlen : lhs.length = rhs.length) :
+    compare lhs rhs ⦃ (result : U8) =>
+      result.val =
+        if (∀ (j : Nat), j < lhs.length → lhs.val[j]! = rhs.val[j]!)
+        then 0 else 1 ⦄ := by
+  unfold compare
+  step*
+  grind
+\end{lstlisting}
+    \end{block}
+    \footnotesize
+    \textbf{Meaning:} equal-length inputs $\Rightarrow$ successful execution;
+    return 0 for equal slices and 1 otherwise.
+    \smallskip
+
+    \textbf{Loop invariant:} $r=0\ \Longleftrightarrow\ \forall j<i,\;\mathit{lhs}[j]=\mathit{rhs}[j]$.
+    \smallskip
+
+    \begin{tabular}{@{}p{0.12\textwidth}p{0.83\textwidth}@{}}
+        \textbf{Initialize} & $i=0$, $r=0$: the empty prefixes match. \\[3pt]
+        \textbf{Preserve} & OR accumulates XOR differences; bit-vector lemmas establish the invariant at $i+1$. \\[3pt]
+        \textbf{Finish} & $n-i$ decreases; equal lengths ensure valid accesses. At $i=n$, use \texttt{is\_non\_zero}. \\
+    \end{tabular}
+    \smallskip
+
+    \scriptsize
+    \texttt{step*} applies helper specifications; \texttt{grind} closes the logical goal.
+    The theorem establishes functional behavior, not constant-time execution.
+\end{frame}
+
+% Sources: curve25519-dalek-lean-verify/site/details.md;
+% Curve25519Dalek/Specs/Backend/VariableBaseMul.lean;
+% Curve25519Dalek/Specs/Backend/Serial/U64/Field/FieldElement51/{Mul,ToBytes}.lean.
+\begin{frame}{Dalek: What It Does and What We Verify}
+    \small
+    \begin{itemize}
+        \item \textbf{What is it?} \texttt{curve25519-dalek} is a Rust library for group operations on Curve25519 (Edwards and Montgomery forms) and Ristretto.
+        \item \textbf{What does it compute?} Point addition $P+Q$, scalar multiplication $[s]P$, and conversions between points, scalars, and bytes.
+        \item \textbf{Where is it used?} These operations support key agreement, digital signatures, and zero-knowledge proofs; protocol libraries build on them.
+    \end{itemize}
+    \begin{block}{Our Verification Project}
+        Use Aeneas and Lean to verify selected functions in the 64-bit serial backend:
+        field arithmetic modulo $2^{255}-19$, byte encodings, and curve operations.
+    \end{block}
+    \footnotesize
+    \textbf{Example guarantee:} for a valid point $P$ and scalar bytes with the top bit clear,
+    scalar multiplication succeeds and returns a valid point $Q$ with
+    \[
+        \operatorname{toPoint}(Q)
+        = [\operatorname{decode}(s)]\operatorname{toPoint}(P).
+    \]
+    This connects the concrete Rust computation to the mathematical group operation.
+\end{frame}
+
+
+\begin{frame}{Lessons from Practice}
+    \begin{itemize}
+        \item AI capabilities in constructing Lean proofs have improved substantially.
+        \item Simple prompts appear sufficient in most cases.
+        \item The clarity of AI-generated explanations has become a key bottleneck.
+        % Ask the AI to simplify its explanations.
+        \item A simple design is sufficient for the agent harness.
+        \item Cross-model review is crucial when writing specifications.
     \end{itemize}
 \end{frame}
 
+\begin{frame}{Advances in AI-Assisted Lean Proofs}
+    \begin{itemize}
+        \item One year ago, AI struggled to construct challenging proofs.
+        \item At that time, proofs involving loop invariants were beyond its capabilities in my experience.
+        \item In my recent work, I have not encountered a proof that AI could not complete.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Simple Prompts Often Suffice}
+    \begin{itemize}
+        \item One year ago, Claude Code skills were developed to guide AI workflows.
+        \item These skills use Markdown documents to provide instructions to AI agents.
+        \item The Model Context Protocol (MCP) provides an additional mechanism for tool integration.
+        \item Examples include Lean 4 skills and Lean MCP integrations.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Simple Prompts Often Suffice}
+    \begin{itemize}
+        \item Current AI systems appear substantially more capable.
+        \item I examined how Claude Code operates in my Lean workflow.
+        \item In the sessions I examined, it used neither skills nor MCP tools to construct Lean proofs.
+        \item Why might MCP tools be unnecessary in this workflow?
+        \item MCP tools can expose the tree structure of proofs.
+        \item However, this view may omit global information, such as the number of remaining \texttt{sorry} placeholders.
+        \item Given current AI capabilities in Lean, elaborate prompts appear to offer limited additional benefit.
+        \item The most useful instruction appears to be: ``Decompose the proof and compile after each completed step.''
+        \item Claude Code skills appear less useful in this workflow than they once were.
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Clarity of AI-Generated Explanations}
+    \begin{itemize}
+        \item Despite its capabilities, AI still requires human guidance.
+        \item Clear, comprehensible explanations are essential for effective human oversight.
+        \item AI systems tend to produce lengthy responses.
+        \item My most frequent instruction is: ``Please shorten your response while preserving precision and clarity.''
+        \item AI models should communicate their results in language that users can readily understand.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{A Simple Harness Design Is Sufficient}
+    \begin{itemize}
+        \item Use a simple workflow to coordinate proof development.
+        \item Assign a central agent to determine which proof node to expand next.
+        \item Determine which proof nodes can be addressed within the current iteration.
+        \item Record progress after each iteration.
+        \item Reset the working context periodically to prevent excessive accumulation.
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}{A Simple Harness Design Is Sufficient}
+    \begin{itemize}
+        \item Initially, I was unable to complete the proof.
+        \item The \texttt{to\_bytes} implementation exceeds 700 lines of code, and proof attempts frequently time out.
+        \item The only effective workflow I found was to decompose complex theorems into simpler lemmas.
+        \item Compile after each incremental improvement.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Cross-Model Review for Specification Writing}
+\begin{itemize}
+\item AI can generate specifications, but these specifications may contain errors.
+
+\item Complement manual review with independent reviews by different AI models.
+\item This approach is particularly useful for less critical specifications.
+\item Examples include helper lemmas and functions outside the public API.
+\item Cross-model review is a practical approach to checking these specifications.
+\end{itemize}
+
+\end{frame}
+
+
+%------------------------------------------------
+\section{Prospects}
 %------------------------------------------------
 
-\begin{frame}{Blocks of Highlighted Text}
-    In this slide, some important text will be \alert{highlighted} because it's important. Please, don't abuse it.
+\begin{frame}{Prospects: Important Directions of AI for formal verification}
+    \begin{itemize}
+        \item Efficient Inference
+        \item Understandable Formal verification
+    \end{itemize}
+\end{frame}
 
-    \begin{block}{Block}
-        Sample text
+\begin{frame}{Prospects: Important Directions of AI for formal verification}
+    \begin{itemize}
+        \item Efficient Inference
+        \item Understandable Formal verification
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Specification as a Central Research Challenge}
+    \begin{itemize}
+        \item As proof construction becomes easier, selecting the right statements may require more attention.
+        \item Generate candidate specifications from documentation, interfaces, and intended use cases.
+        \item Make assumptions, boundary conditions, and excluded behaviors explicit.
+        \item Require human review of whether each formal statement captures the intended requirement.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Evaluating the Strength of Specifications}
+    \begin{itemize}
+        \item Check whether specifications rule out plausible implementation errors.
+        \item Use examples and counterexamples to clarify the behaviors a specification permits.
+        \item Investigate mutation-based evaluation: would an incorrect implementation still satisfy the statement?
+        \item Examine whether assumptions are consistent and whether conclusions provide meaningful guarantees.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Scaling through Compositional Verification}
+    \begin{itemize}
+        \item Decompose large verification tasks into components with explicit contracts.
+        \item Develop reusable lemmas for recurring patterns, including loops and data conversions.
+        \item Track dependencies between local guarantees and system-level properties.
+        \item Use projects such as Dalek and SPQR to explore how these workflows scale.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{More Effective Agent Coordination}
+    \begin{itemize}
+        \item Maintain a shared record of proof obligations, dependencies, and completed results.
+        \item Assign bounded tasks with clear completion criteria to individual agents.
+        \item Separate specification review from proof construction to encourage independent scrutiny.
+        \item Evaluate whether additional agents justify their coordination and computational costs.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Human Oversight through Clear Explanations}
+    \begin{itemize}
+        \item Present each result with its formal statement, assumptions, and a concise explanation.
+        \item Explain how the statement corresponds to the original software requirement.
+        \item Highlight unresolved obligations and decisions that require human judgment.
+        \item Treat clarity and review effort as explicit evaluation criteria.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Verification throughout Software Maintenance}
+    \begin{itemize}
+        \item Integrate proof checking into the development and review workflow.
+        \item Identify which specifications and proofs are affected by implementation changes.
+        \item Explore AI-assisted proof repair while preserving the intended guarantees.
+        \item Review changes to theorem statements and assumptions as carefully as changes to code.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Evaluating Practical Progress}
+    \begin{itemize}
+        \item Measure completion rates on representative verification tasks.
+        \item Report computational cost, elapsed time, and human intervention.
+        \item Assess specification quality, proof maintainability, and reproducibility.
+        \item Track remaining proof gaps and assumptions alongside successful results.
+        \item Compare simple workflows with more elaborate agent architectures.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{A Proposed Roadmap}
+    \begin{enumerate}
+        \item Establish reproducible workflows for bounded verification tasks.
+        \item Strengthen specification review and build reusable proof libraries.
+        \item Extend verification across component boundaries and software revisions.
+        \item Evaluate sustained use in realistic development settings.
+    \end{enumerate}
+    \medskip
+    \begin{block}{Long-Term Objective}
+        Make rigorous, understandable, and maintainable verification accessible to more developers.
     \end{block}
-
-    \begin{alertblock}{Alertblock}
-        Sample text in red box
-    \end{alertblock}
-
-    \begin{examples}
-        Sample text in green box. The title of the block is ``Examples".
-    \end{examples}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Multiple Columns}
-    \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
-
-        \column{.45\textwidth} % Left column and width
-        \textbf{Heading}
-        \begin{enumerate}
-            \item Statement
-            \item Explanation
-            \item Example
-        \end{enumerate}
-
-        \column{.5\textwidth} % Right column and width
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lectus nisl, ultricies in feugiat rutrum, porttitor sit amet augue. Aliquam ut tortor mauris. Sed volutpat ante purus, quis accumsan dolor.
-
-    \end{columns}
-\end{frame}
-
-%------------------------------------------------
-\section{Second Section}
-%------------------------------------------------
-
-\begin{frame}{Table}
-    \begin{table}
-        \begin{tabular}{l l l}
-            \toprule
-            \textbf{Treatments} & \textbf{Response 1} & \textbf{Response 2} \\
-            \midrule
-            Treatment 1         & 0.0003262           & 0.562               \\
-            Treatment 2         & 0.0015681           & 0.910               \\
-            Treatment 3         & 0.0009271           & 0.296               \\
-            \bottomrule
-        \end{tabular}
-        \caption{Table caption}
-    \end{table}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Theorem}
-    \begin{theorem}[Mass--energy equivalence]
-        $E = mc^2$
-    \end{theorem}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Figure}
-    Uncomment the code on this slide to include your own image from the same directory as the template .TeX file.
-    %\begin{figure}
-    %\includegraphics[width=0.8\linewidth]{test}
-    %\end{figure}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}[fragile] % Need to use the fragile option when verbatim is used in the slide
-    \frametitle{Citation}
-    An example of the \verb|\cite| command to cite within the presentation:\\~
-
-    This statement requires citation \cite{p1}.
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{References}
-    % Beamer does not support BibTeX so references must be inserted manually as below
-    \footnotesize{
-        \begin{thebibliography}{99}
-            \bibitem[Smith, 2012]{p1} John Smith (2012)
-            \newblock Title of the publication
-            \newblock \emph{Journal Name} 12(3), 45 -- 678.
-        \end{thebibliography}
-    }
 \end{frame}
 
 %------------------------------------------------
