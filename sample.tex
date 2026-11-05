@@ -13,6 +13,18 @@
 \usepackage{graphicx} % Allows including images
 \usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
 
+% Introduce each section with a roadmap highlighting the section ahead.
+\AtBeginSection[]{%
+    \begingroup
+    \setbeamercolor{section in toc}{fg=DarkBlue}
+    \setbeamercolor{section in toc shaded}{fg=black!30}
+    \setbeamertemplate{section in toc shaded}[default][100]
+    \begin{frame}{Roadmap}
+        \tableofcontents[sectionstyle=show/shaded,subsectionstyle=hide]
+    \end{frame}
+    \endgroup
+}
+
 %----------------------------------------------------------------------------------------
 %	TITLE PAGE
 %----------------------------------------------------------------------------------------
@@ -69,6 +81,32 @@
     \href{https://www.beneficialaifoundation.org/signal-shot}{Signal Shot}.
 \end{frame}
 
+\begin{frame}{What Is Signal?}
+    \small
+    \begin{columns}[c,onlytextwidth]
+    \begin{column}{0.74\textwidth}
+    \begin{itemize}
+        \item \textbf{Signal the app:} a messaging app for private conversations, including text messages, group chats, and voice/video calls.
+        \item \textbf{End-to-end encryption:} messages are encrypted on the sender's device and decrypted on the recipient's device; the service does not have the keys to read them. Even if a hacker attacks the server, he cannot get messages from all users.
+        \item \textbf{Signal Protocol:} the cryptographic protocol underlying these encrypted conversations.
+    \end{itemize}
+    \end{column}
+    \begin{column}{0.23\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/signal.png}
+    \end{column}
+    \end{columns}
+    % \begin{exampleblock}{Example: Alice Sends Bob a Message}
+    %     Alice's device encrypts $\longrightarrow$ the server relays ciphertext
+    %     $\longrightarrow$ Bob's device decrypts.
+    % \end{exampleblock}
+    \textbf{Why verification?} 
+    % Security depends on both the protocol design and its software implementation behaving as intended.
+    Confrim the security of Signal since it is a secure message app
+    \medskip
+
+\end{frame}
+
 \begin{frame}{Signal Shot: A Shared Verification Challenge}
     \small
     \textbf{Launched in April 2026:} a collaborative initiative to formally verify
@@ -79,12 +117,12 @@
         \item \textbf{Community ambition:} bring together Lean, cryptography, software verification, and AI-assisted theorem proving.
         \item \textbf{Concrete workstreams:} the initiative links verification repositories for libsignal, PQXDH, and SPQR.
     \end{itemize}
-    \begin{block}{From the Initiative to This Talk}
-        SPQR is our practical case study: writing specifications, constructing Lean proofs,
-        and understanding where AI helps and where human judgment remains essential.
-    \end{block}
-    \scriptsize
-    Source: \href{https://www.beneficialaifoundation.org/signal-shot}{Signal Shot: objectives and project repositories}.
+    % \begin{block}{From the Initiative to This Talk}
+    %     SPQR is our practical case study: writing specifications, constructing Lean proofs,
+    %     and understanding where AI helps and where human judgment remains essential.
+    % \end{block}
+    % \scriptsize
+    % Source: \href{https://www.beneficialaifoundation.org/signal-shot}{Signal Shot: objectives and project repositories}.
 \end{frame}
 
 %------------------------------------------------
@@ -279,6 +317,8 @@ theorem compare_spec (lhs rhs : Slice U8)
     This connects the concrete Rust computation to the mathematical group operation.
 \end{frame}
 
+
+\section{Lessons from Practice}
 
 \begin{frame}{Lessons from Practice}
     \begin{itemize}
