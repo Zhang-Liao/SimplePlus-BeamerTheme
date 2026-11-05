@@ -7,6 +7,7 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning}
 \usepackage{listings}
+\newsavebox{\longspecbox}
 \lstset{basicstyle=\ttfamily\scriptsize,columns=fullflexible,keepspaces=true,showstringspaces=false,aboveskip=3pt,belowskip=3pt}
 
 \usepackage{hyperref}
@@ -21,9 +22,19 @@
     \setbeamercolor{section in toc shaded}{fg=black!30}
     \setbeamertemplate{section in toc shaded}[default][100]
     \begin{frame}{Roadmap}
-        \tableofcontents[sectionstyle=show/shaded,subsectionstyle=hide]
+        \tableofcontents[sectionstyle=show/shaded,subsectionstyle=show/show/hide]
     \end{frame}
     \endgroup
+}
+
+% Give each practice and lessons block a clear visual transition.
+\AtBeginSubsection[]{%
+    \begin{frame}
+        \centering
+        {\large\color{DarkBlue}\insertsectionhead\par}
+        \vspace{0.8cm}
+        {\Huge\bfseries\color{DarkBlue}\insertsubsectionhead\par}
+    \end{frame}
 }
 
 %----------------------------------------------------------------------------------------
@@ -40,7 +51,7 @@
     Beneficial AI Foundation \\
 }
 % \date{\today} % Date, can be changed to a custom date
-\date{Novermeber 6, 2026} % Date, can be changed to a custom date
+\date{November 6, 2026} % Date, can be changed to a custom date
 
 
 %----------------------------------------------------------------------------------------
@@ -59,12 +70,12 @@
     \tableofcontents
 \end{frame}
 
-\begin{frame}{Self introduction}
+\begin{frame}{About Me}
     \begin{itemize}
-        \item A research scientist at beneficial AI foundation.
-        \item Work on AI for formal verification since 2018.
-        \item PhD from University of Innsbruck, Austria
-        \item Focus on AI for math and coding
+        \item Research Scientist at the Beneficial AI Foundation.
+        \item Working on AI for formal verification since 2018.
+        \item PhD from the University of Innsbruck, Austria.
+        \item Research focus: AI for mathematics and software development.
         % \item The first to use AI to generate explicit rules about how to apply tactics
         % \item The first to apply AI for term rewriting
         % \item Build the first comprehensive benchmark on property based testing for codeing agents
@@ -72,11 +83,11 @@
 \end{frame}
 
 %------------------------------------------------
-\begin{frame}{Self Introduction: Selected Research}
+\begin{frame}{Selected Research}
     \begin{columns}[T,onlytextwidth]
         \begin{column}{0.48\textwidth}
             \begin{block}{AI for Term Rewriting}
-                \small The first to apply AI for term rewriting and prove the largest number of problems in annual confluence competition.
+                \small Pioneering AI methods for term rewriting, solving the most problems in the annual Confluence Competition.
             \end{block}
             \medskip
             \includegraphics[width=\linewidth]{img/aaai.png}
@@ -91,7 +102,7 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{Self Introduction: Selected Research}
+\begin{frame}{Selected Research}
     \begin{block}{Evaluating AI Agents on Property-Based Testing}
         \small From documentation to semantic invariants and input-generation strategies that reveal bugs.
     \end{block}
@@ -112,18 +123,14 @@
     \end{block}
     \begin{itemize}
         \item Founded by Max Tegmark.
-        \item AI is unsafe, what should we do?
-        \item Main approach:
-        AI generates program and verify the correctness and safety of the program. Then use the program to reply to the user instead of using AI.
+        \item A central question: how can we make AI systems safer and more reliable?
+        \item One approach: use AI to generate programs, formally verify their
+              correctness and safety properties, and use the verified programs
+              to carry out user tasks.
     \end{itemize}
     \medskip
     \footnotesize
     \textbf{Connection to practice:} cryptographic software provides concrete, demanding verification tasks.
-    \medskip
-
-    \scriptsize
-    % Sources: \href{https://www.beneficialaifoundation.org/main}{Beneficial AI Foundation};
-    % \href{https://www.beneficialaifoundation.org/signal-shot}{Signal Shot}.
     \end{column}
     \begin{column}{0.26\textwidth}
         \centering
@@ -131,11 +138,6 @@
         \smallskip
 
         {\small\textbf{Max Tegmark}\par}
-        \smallskip
-        {\tiny Photo: \href{https://commons.wikimedia.org/wiki/File:Max_Tegmark_01.jpg}{Bengt Oberger / Wikimedia Commons}\par
-        % \href{https://creativecommons.org/licenses/by-sa/4.0/}
-        % {CC BY-SA 4.0}\par
-        }
     \end{column}
     \end{columns}
 \end{frame}
@@ -146,7 +148,7 @@
     \begin{column}{0.74\textwidth}
     \begin{itemize}
         \item \textbf{Signal the app:} a messaging app for private conversations, including text messages, group chats, and voice/video calls.
-        \item \textbf{End-to-end encryption:} messages are encrypted on the sender's device and decrypted on the recipient's device; the service does not have the keys to read them. Even if a hacker attacks the server, he cannot get messages from all users.
+        \item \textbf{End-to-end encryption:} messages are encrypted on the sender's device and decrypted on the recipient's device. The server relays ciphertext without access to the decryption keys.
         \item \textbf{Signal Protocol:} the cryptographic protocol underlying these encrypted conversations.
     \end{itemize}
     \end{column}
@@ -161,7 +163,7 @@
     % \end{exampleblock}
     \textbf{Why verification?} 
     % Security depends on both the protocol design and its software implementation behaving as intended.
-    Confrim the security of Signal since it is a secure message app
+    Establish that the protocol and its implementation satisfy their intended security properties.
     \medskip
 
 \end{frame}
@@ -180,18 +182,14 @@
     %     SPQR is our practical case study: writing specifications, constructing Lean proofs,
     %     and understanding where AI helps and where human judgment remains essential.
     % \end{block}
-    % \scriptsize
-    % Source: \href{https://www.beneficialaifoundation.org/signal-shot}{Signal Shot: objectives and project repositories}.
 \end{frame}
 
 %------------------------------------------------
-\section{Practice}
+\section{SPQR and Dalek}
+\subsection{Practice}
 %------------------------------------------------
 
 
-% Sources: SparsePostQuantumRatchet-verify/README.md;
-% src/encoding/gf.rs; SrcTranslated/Funs.lean;
-% Spqr/Specs/Encoding/Gf/GF16/Mul.lean.
 % Aeneas pipeline: https://aeneasverif.github.io/projects/
 % Semantic foundation: https://arxiv.org/abs/2404.02680
 % Functional translation: https://arxiv.org/abs/2206.07185
@@ -203,7 +201,7 @@
     \begin{itemize}
         \item \textbf{The protocol:} a component of Signal that updates encryption keys during a conversation, designed to resist quantum attacks.
         \item \textbf{The code:} Signal also provides a Rust library implementing SPQR. This is the software we study.
-        \item \textbf{Why ``sparse''?} The data needed for a fresh post-quantum key update is spread across multiple messages.
+        % \item \textbf{Why ``sparse''?} The data needed for a fresh post-quantum key update is spread across multiple messages.
     \end{itemize}
     \medskip
     \textbf{Intuition:} Alice and Bob keep updating their keys as they exchange messages.
@@ -212,9 +210,6 @@
         that data is encoded correctly and key-update steps follow their specifications.
         This is implementation correctness, not a proof of all of Signal's security.
     \end{block}
-    \scriptsize
-    Sources: \href{https://signal.org/blog/spqr/}{Signal: SPQR overview};
-    \href{https://github.com/signalapp/SparsePostQuantumRatchet}{SPQR Rust implementation}.
 \end{frame}
 
 \begin{frame}{SPQR: From Rust Code to Checked Proofs}
@@ -273,11 +268,6 @@
         \item \textbf{Translation:} Aeneas symbolically executes LLBC, tracking values, borrows, and loans. Mutation becomes explicit value updates in pure functions.
         \item \textbf{Semantic foundation:} formal results relate the borrow-based semantics to a heap-and-address model for the formalized language, not the entire Rust toolchain.
     \end{itemize}
-    \medskip
-    \scriptsize
-    % Sources: \href{https://aeneasverif.github.io/projects/}{Aeneas / Charon documentation};
-    % \href{https://arxiv.org/abs/2206.07185}{Functional Translation (2022)};
-    % \href{https://arxiv.org/abs/2404.02680}{Symbolic Semantics (2024)}.
 \end{frame}
 
 % Actual example: src/util.rs; SrcTranslated/Funs.lean (util.compare);
@@ -334,13 +324,13 @@ ok (cont (iter1, r1))
 \begin{frame}[fragile]{SPQR Example: Specification and Proof}
     \lstset{basicstyle=\ttfamily\fontsize{7}{8}\selectfont}
     \begin{block}{Specification and Top-Level Proof (\texttt{compare\_spec})}
-\begin{lstlisting}[literate={⦃}{{$\lbrace\!\lbrace$}}1 {⦄}{{$\rbrace\!\rbrace$}}1 {∀}{{$\forall$}}1 {→}{{$\to$}}1 {=>}{{$\Rightarrow$}}2]
+\begin{lstlisting}[escapeinside={(*@}{@*)}]
 theorem compare_spec (lhs rhs : Slice U8)
     (hlen : lhs.length = rhs.length) :
-    compare lhs rhs ⦃ (result : U8) =>
+    compare lhs rhs (*@$\lbrace\!\lbrace$@*) (result : U8) =>
       result.val =
-        if (∀ (j : Nat), j < lhs.length → lhs.val[j]! = rhs.val[j]!)
-        then 0 else 1 ⦄ := by
+        if ((*@$\forall$@*) (j : Nat), j < lhs.length (*@$\to$@*) lhs.val[j]! = rhs.val[j]!)
+        then 0 else 1 (*@$\rbrace\!\rbrace$@*) := by
   unfold compare
   step*
   grind
@@ -366,75 +356,159 @@ theorem compare_spec (lhs rhs : Slice U8)
     The theorem establishes functional behavior, not constant-time execution.
 \end{frame}
 
-% Concrete examples from /home/zhang-liao/spqr2/SparsePostQuantumRatchet-verify.
-% Encaps1.lean: encaps1_spec; the sketch below omits Lean representation details.
+% Actual declaration: Spqr/Specs/V1/Chunked/SendCt/HeaderReceived/SendCt1Chunk.lean:116--176.
+% All hypotheses and postconditions retained; comments omitted; two namespaces abbreviated.
 \begin{frame}[fragile]{SPQR: Reviewing Long Specifications}
     \small
-    \textbf{Example: \texttt{encaps1}} returns ciphertext, intermediate state, and a shared secret.
+    \textbf{\texttt{send\_ct1\_chunk\_spec}: 61 source lines before the proof begins.}\\
+    {\scriptsize Complete statement below; comments omitted and namespaces shortened.}
     \begin{columns}[T,onlytextwidth]
-        \begin{column}{0.53\textwidth}
-            \begin{block}{Contract Sketch (Simplified from Lean)}
-\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
-Assume: header length >= 64
-  fill_bytes succeeds
-Guarantee: there exists one message m
-  of 32 bytes such that
-  ct1 = ct1List(header, m)
-  es  = stateOut(header, m)
-  ss  = ssOut(header, m)
-Lengths:
-  ct1: 960, es: 2080, ss: 32
+        \begin{column}{0.49\textwidth}
+\begin{lrbox}{\longspecbox}
+\begin{minipage}{17cm}
+\begin{lstlisting}[basicstyle=\ttfamily\fontsize{10}{10}\selectfont,escapeinside={(*@}{@*)},numbers=left,numberstyle=\tiny\color{gray},numbersep=3pt,firstnumber=1]
+theorem send_ct1_chunk_spec {R : Type} (rngInst : rand_1.rng.Rng R)
+    (cryptoInst : rand_core_1.CryptoRng R) (self : HeaderReceived) (rng : R)
+    (h_hdr : self.uc.hdr.length = 64)
+    (h_fill : (*@$\forall$@*) (r : R) (s : Slice U8),
+      rngInst.rand_core_1RngCoreInst.fill_bytes r s (*@$\lbrace\!\lbrace$@*) fun _ => True (*@$\rbrace\!\rbrace$@*))
+    (h_root : self.uc.auth.root_key.length + 32 (*@$\leq$@*) Usize.max) :
+    send_ct1_chunk rngInst cryptoInst self rng (*@$\lbrace\!\lbrace$@*)
+      (result : (v1.chunked.send_ct.Ct1Sampled (*@$\times$@*) encoding.Chunk (*@$\times$@*) EpochSecret) (*@$\times$@*) R) =>
+      let st := result.1.1
+      let chunk := result.1.2.1
+      let es := result.1.2.2
+      st.uc.epoch = self.uc.epoch (*@$\land$@*) st.uc.hdr = self.uc.hdr (*@$\land$@*)
+      st.uc.ct1.length = 960 (*@$\land$@*) st.uc.es.length = F.encapsStateSize (*@$\land$@*)
+      es.epoch = self.uc.epoch (*@$\land$@*) es.secret.length = 32 (*@$\land$@*)
+      ((*@$\exists$@*) m : Fin 32 (*@$\to$@*) UInt8,
+        st.uc.ct1.val = F.ct1List self.uc.hdr.val (by scalar_tac) m (*@$\land$@*)
+        st.uc.es.val = F.toU8List
+          (F.stateOut self.uc.hdr.val (by scalar_tac) m) (*@$\land$@*)
+        es.secret.val = hkdf (replicate 32 0#u8)
+          (F.toU8List
+            (F.ssOut self.uc.hdr.val (by scalar_tac) m))
+          (sckaKeyLabel ++ to_be_bytes self.uc.epoch) 32) (*@$\land$@*)
+      st.uc.auth.root_key.length = 32 (*@$\land$@*) st.uc.auth.mac_key.length = 32 (*@$\land$@*)
+      st.uc.auth.root_key.val ++ st.uc.auth.mac_key.val
+        = hkdf (replicate 32 0#u8) (self.uc.auth.root_key.val ++ es.secret.val)
+          (authenticator.Authenticator.updateLabel ++ to_be_bytes self.uc.epoch) 64 (*@$\land$@*)
+      st.receiving_ek = self.receiving_ek (*@$\land$@*)
 \end{lstlisting}
-            \end{block}
+\end{minipage}
+\end{lrbox}
+\resizebox{\linewidth}{!}{\usebox{\longspecbox}}
         \end{column}
-        \begin{column}{0.44\textwidth}
-            \textbf{What must a reviewer check?}
-            \begin{itemize}
-                \item All three outputs use the \emph{same} message \texttt{m}.
-                \item The named model functions describe the intended bytes, not just their sizes.
-                \item Input conditions match actual callers.
-                \item Success of \texttt{fill\_bytes} does not establish uniform randomness.
-            \end{itemize}
+        \begin{column}{0.49\textwidth}
+\begin{lrbox}{\longspecbox}
+\begin{minipage}{17cm}
+\begin{lstlisting}[basicstyle=\ttfamily\fontsize{10}{10}\selectfont,escapeinside={(*@}{@*)},numbers=left,numberstyle=\tiny\color{gray},numbersep=3pt,firstnumber=28]
+chunk.index.val = 0 (*@$\land$@*)
+chunk.data.length = 32 (*@$\land$@*)
+st.sending_ct1.idx.val = 1 (*@$\land$@*)
+((*@$\exists$@*) pts : Array Point 16#usize,
+  ((*@$\forall$@*) (j : Nat), j < 16 (*@$\to$@*) (pts[j]!).value.length = 30) (*@$\land$@*)
+  ((*@$\forall$@*) (j : Nat), j < 16 (*@$\to$@*) (*@$\forall$@*) (k : Nat), k < 30 (*@$\to$@*)
+    (listToGF216Poly (pts[j]!).value).coeff k =
+      (256 * st.uc.ct1.val[2 * (j + 16 * k)]! +
+        (st.uc.ct1.val[2 * (j + 16 * k) + 1]!).val).toGF216) (*@$\land$@*)
+  ((st.sending_ct1.s = .Points pts (*@$\land$@*)
+    (*@$\forall$@*) (j : Nat), j < 16 (*@$\to$@*)
+      PolyEncoder.chunkWord chunk.data j =
+        ((pts[j]!).value[0]!).toGF216) (*@$\lor$@*)
+   ((*@$\exists$@*) polys', st.sending_ct1.s = .Polys polys' (*@$\land$@*)
+    ((*@$\forall$@*) (j : Nat), j < 16 (*@$\to$@*)
+      polys'[j]!.toGF216Poly =
+        (*@$\sum$@*) k (*@$\in$@*) Finset.range (pts[j]!).value.length,
+          C (((pts[j]!).value[k]!).toGF216) *
+            scaledLagrangeBasis (Vec.len ((pts[j]!).value)) k) (*@$\land$@*)
+    ((*@$\forall$@*) (j : Nat), j < 16 (*@$\to$@*)
+      (polys'[j]!).coefficients.length + 1 (*@$\leq$@*) Usize.max) (*@$\land$@*)
+    ((*@$\forall$@*) (j : Nat), j < 16 (*@$\to$@*)
+      PolyEncoder.chunkWord chunk.data j =
+          ((pts[j]!).value[0]!).toGF216 (*@$\lor$@*)
+      PolyEncoder.chunkWord chunk.data j =
+        (polys'[j]!).toGF216Poly.eval (Nat.toGF216 0))))) (*@$\rbrace\!\rbrace$@*)
+\end{lstlisting}
+\end{minipage}
+\end{lrbox}
+\resizebox{\linewidth}{!}{\usebox{\longspecbox}}
         \end{column}
     \end{columns}
+    \smallskip
     \footnotesize
-    \textbf{Difficulty:} Lean checks the proof of the statement; humans must still check that the statement captures the intended behavior.
-    \par\smallskip
-    \scriptsize Source: \texttt{Spqr/Specs/IncrementalMlkem768/Encaps1.lean}, \texttt{encaps1\_spec}.
+    \textbf{Review:} shared randomness, HKDF labels, state preservation, byte indices, encoder branches.\\[3pt]
+    \textbf{A checked proof does not tell us whether these are the right requirements.}
 \end{frame}
 
-% Documented review counterexamples, not a claim that the current spec has this bug.
-% doc/AI_PR_REVIEW_QUESTIONS.md, "Specifications must rule out plausible wrong implementations".
-\begin{frame}{SPQR: A True Specification Can Be Too Weak}
+\begin{frame}{SPQR: What Does This Specification Mean?}
     \small
-    \textbf{Example: garbage collection of stored message keys.}
-    Old keys should be removed while the required live keys are preserved.
-    \begin{block}{A Plausible but Insufficient Specification}
-        ``Every key remaining after cleanup is valid.''
+    \textbf{Task:} generate the first ciphertext chunk after receiving a header.\\
+    {\footnotesize Assumptions: a 64-byte header, successful RNG calls, and no key-length overflow.}
+    \begin{center}
+    \begin{tikzpicture}[
+        box/.style={draw=MediumBlue,rounded corners=3pt,align=center,
+            minimum height=1.05cm,inner sep=4pt,font=\footnotesize},
+        flow/.style={-{Stealth[length=2mm]},thick,MediumBlue}]
+        \node[box,fill=InvisibleBlue,text width=2.4cm] (input) at (0,0)
+            {\textbf{Received header}\\Current epoch\\and root key};
+        \node[box,fill=InvisibleGreen,text width=2.7cm] (encaps) at (3.5,0)
+            {\textbf{Encapsulation}\\960-byte ciphertext\\and shared secret};
+        \node[box,fill=InvisibleGreen,text width=2.7cm] (encode) at (7.1,0)
+            {\textbf{Polynomial encoding}\\16 groups of\\30 two-byte values};
+        \node[box,fill=InvisibleBlue,text width=2.4cm] (chunk) at (10.6,0)
+            {\textbf{First chunk}\\Index 0\\32 data bytes};
+        \draw[flow] (input) -- (encaps);
+        \draw[flow] (encaps) -- (encode);
+        \draw[flow] (encode) -- (chunk);
+        \node[box,fill=InvisibleGreen,text width=4.4cm] (keys) at (3.5,-1.85)
+            {\textbf{Derive and update keys}\\32-byte epoch secret via HKDF\\New root key and MAC key};
+        \node[box,fill=InvisibleBlue,text width=4.4cm] (state) at (9,-1.85)
+            {\textbf{State after the call}\\Next chunk index: 1\\Same epoch, header, and decoder};
+        \draw[flow] (encaps) -- (keys);
+        \draw[flow] (chunk.south) -- (10.6,-1.0) -- (state.north);
+    \end{tikzpicture}
+    \end{center}
+    \footnotesize
+    \begin{itemize}
+        \item \textbf{Consistency:} ciphertext, saved encapsulation state, and shared secret
+              must come from the same 32-byte random input.
+        \item \textbf{Encoding:} the chunk must match that ciphertext, whether the encoder
+              uses stored points or interpolating polynomials.
+    \end{itemize}
+    \smallskip
+    \textbf{Why review is hard:} every link in this diagram becomes a precise logical condition.
+\end{frame}
+
+\begin{frame}{SPQR: When Specifications Do Not Compose}
+    \small
+    \textbf{Main failure: inconsistent variable bounds across specifications.}
+    \begin{block}{Initially: Specifications Hold in Isolation}
+        Each specification is true under its own variable bounds,
+        and its proof checks with those assumptions.
     \end{block}
     \begin{columns}[T,onlytextwidth]
         \begin{column}{0.48\textwidth}
-            \begin{exampleblock}{Counterexample A: Delete Everything}
-                The output is empty, so every remaining key is valid.
-                The statement holds even though all live keys are lost.
+            \begin{exampleblock}{Later: Compose the Specifications}
+                A caller must establish the variable bounds required by the callee's
+                specification before applying it.
             \end{exampleblock}
         \end{column}
         \begin{column}{0.48\textwidth}
-            \begin{exampleblock}{Counterexample B: Duplicate a Live Key}
-                Keep one live key twice and lose another.
-                Each remaining entry can still be valid.
+            \begin{exampleblock}{Why the Composition Fails}
+                The specifications use different bounds.
+                The bounds available at the call site do not imply those required
+                by the callee, so the proof cannot proceed.
             \end{exampleblock}
         \end{column}
     \end{columns}
     \medskip
-    \textbf{Review obligation:} specify which entries survive and preserve their multiplicity,
-    rather than only checking each output entry in isolation.
+    \textbf{Repair at scale:} revise and align variable bounds across many specifications,
+    then repair their proofs and the dependent proofs.
     \medskip
 
     \footnotesize
-    \textbf{Lesson:} a completed proof cannot repair a missing requirement.
-    \par\smallskip
-    \scriptsize Source: documented review examples in \texttt{doc/AI\_PR\_REVIEW\_QUESTIONS.md}.
+    \textbf{Lesson:} locally true specifications need compatible bounds to compose.
 \end{frame}
 
 % Cargo.toml [package.metadata.charon], translation-patches/lib-state_pb.patch.
@@ -462,35 +536,57 @@ Lengths:
     \begin{block}{The Extra Verification Obligation}
         A proof about a handwritten Lean model still needs justification that the external Rust code behaves like that model.
     \end{block}
-    \scriptsize Sources: \texttt{Cargo.toml}; \texttt{translation-patches/lib-state\_pb.patch}.
+\end{frame}
+
+% SrcTranslated/FunsExternal.lean: Vec default model and proof; names shortened below.
+\begin{frame}[fragile]{SPQR: Modeling External Functions in Lean}
+    \footnotesize
+    \lstset{basicstyle=\ttfamily\fontsize{8}{9}\selectfont}
+    \begin{block}{Route 1: Write a Lean Model and Prove Its Specification}
+        Example from the external models: \texttt{Vec::default} (names shortened).
+\begin{lstlisting}[escapeinside={(*@}{@*)}]
+def vec_default (T : Type) : Result (alloc.vec.Vec T) :=
+  ok (alloc.vec.Vec.new T)
+
+theorem vec_default_spec (T : Type) :
+    vec_default T (*@$\lbrace\!\lbrace$@*) v => v.val = [] (*@$\rbrace\!\rbrace$@*) := by
+  simp [vec_default, alloc.vec.Vec.new]
+\end{lstlisting}
+        The spec is proved from a body. Matching that model to Rust remains an obligation.
+    \end{block}
+    \begin{block}{Route 2: Extend Translation Support}
+        Improve Charon/Aeneas support for the unsupported Rust features, then translate
+        the implementation and prove its specification from the translated body.
+    \end{block}
+    % \textbf{Current Protobuf interface:} \texttt{encode\_state\_pb} uses
+    % \texttt{opaque + axiom}; its behavior is assumed, not proved from a Lean model.
 \end{frame}
 
 % SrcTranslated/FunsExternal.lean: libcrux_hmac.hmac_sha256_tag32_spec.
 \begin{frame}[fragile]{SPQR: Reviewing External Assumptions}
-    \small
-    \textbf{Example: the external \texttt{libcrux\_hmac::hmac} call.}
-    \begin{block}{Two Different Declarations in Lean}
-\begin{lstlisting}[basicstyle=\ttfamily\small]
+    \footnotesize
+    \begin{block}{An External Declaration Only Gives the Type}
+\begin{lstlisting}
 noncomputable opaque libcrux_hmac.hmac : ...
+\end{lstlisting}
+        \texttt{Result (Vec U8)} allows failure or any output length;
+        it does not guarantee success or 32 bytes.
+    \end{block}
+    \begin{block}{An Axiom Supplies the Missing Contract}
+\begin{lstlisting}
 axiom libcrux_hmac.hmac_sha256_tag32_spec ...
 \end{lstlisting}
-        \footnotesize Signatures shortened: the external names a function; the axiom assumes its behavior.
-    \end{block}
-    \begin{exampleblock}{What This Axiom Actually Says}
-        For key and data lengths $\leq$ \texttt{u32::MAX}, the SHA-256 HMAC call
+        If key and data lengths are $\leq$ \texttt{u32::MAX}, the SHA-256 call
         requesting 32 bytes succeeds and returns 32 bytes.
-    \end{exampleblock}
-    \begin{itemize}
-        \item \textbf{Bounds:} external length conversions to \texttt{u32} can panic.
-        \item \textbf{Scope:} length and success, not the HMAC value or cryptographic security.
-        \item \textbf{Trust:} Lean uses this assumption; downstream proofs depend on it.
-    \end{itemize}
-    \scriptsize Source: \texttt{SrcTranslated/FunsExternal.lean}, \texttt{hmac\_sha256\_tag32\_spec}.
+        Caller proofs use this guarantee. (Signatures shortened.)
+    \end{block}
+    \textbf{Why an axiom?} No translated implementation or Lean body is available
+    to prove this contract.\\[2pt]
+    \textbf{Why do not we write a Lean model:} sometimes proof is challenging and requires to write many definitions.
+    We want faster progress. \\[2pt]
+    \textbf{Review is challenging} 
 \end{frame}
 
-% Sources: curve25519-dalek-lean-verify/site/details.md;
-% Curve25519Dalek/Specs/Backend/VariableBaseMul.lean;
-% Curve25519Dalek/Specs/Backend/Serial/U64/Field/FieldElement51/{Mul,ToBytes}.lean.
 \begin{frame}{Dalek: What It Does and What We Verify}
     \small
     \begin{itemize}
@@ -513,13 +609,107 @@ axiom libcrux_hmac.hmac_sha256_tag32_spec ...
 \end{frame}
 
 
+\subsection{Lessons}
+
+% \begin{frame}{AI Is Now Highly Capable}
+%     \begin{itemize}
+%         \item AI capabilities in constructing Lean proofs have improved substantially.
+%         \item Simple prompts appear sufficient in most cases.
+%         \item The clarity of AI-generated explanations has become a key bottleneck.
+%         % Ask the AI to simplify its explanations.
+%     \end{itemize}
+% \end{frame}
+
+\begin{frame}{AI Is Now Highly Capable}
+    \begin{itemize}
+        \item A year ago, AI struggled with challenging proofs in my workflow.
+        \item Proofs involving loop invariants were particularly difficult.
+        \item In my recent projects, AI has completed every proof task I have attempted with it.
+        \item These include Lean proofs exceeding 1,000 lines.
+        \item Most AI-generated specifications I have reviewed have been correct.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Simple Prompts Often Suffice}
+    \begin{itemize}
+        % \item One year ago, Claude Code skills were developed to guide AI workflows.
+        % \item These skills use Markdown documents to provide instructions to AI agents.
+        \item \textbf{MCP (Model Context Protocol)} is an open standard for connecting
+              AI applications to external tools and data.
+        \item An MCP server exposes tools that an AI agent can discover and call,
+              then returns their results to the agent.
+        \item \textbf{Lean MCP integrations}, such as \texttt{lean-lsp-mcp},
+              connect the agent to Lean's language server and search tools:
+        \begin{itemize}
+            \item Inspect the current proof goal and local hypotheses.
+            \item Read compiler errors, warnings, types, and documentation.
+            \item Search for relevant lemmas and definitions.
+            \item Try tactics or code snippets and inspect Lean's feedback.
+        \end{itemize}
+        \item \textbf{Workflow:} inspect a goal $\to$ propose a proof step
+              $\to$ check with Lean $\to$ revise using feedback.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Simple Prompts Often Suffice}
+    \begin{itemize}
+        \item Recent improvements in AI capabilities have simplified my proof workflow.
+        \item I examined Claude Code's behavior during Lean proof development.
+        \item In the sessions I examined, it used neither skills nor MCP tools to construct Lean proofs.
+        \item Direct file access and compilation were sufficient in these sessions.
+        \item Structured proof views can help inspect individual goals.
+        \item I also need project-wide information, such as the number of remaining \texttt{sorry} placeholders.
+        \item In this workflow, elaborate prompts have offered limited additional benefit.
+        \item My most useful instruction: ``Decompose the proof and compile after each completed step.''
+        % \item Claude Code skills appear less useful in this workflow than they once were.
+    \end{itemize}
+\end{frame}
+
+
+% https://www.anthropic.com/research/formalizing-fermats-last-theorem
+% https://github.com/prove2me/prove2me_workspace/blob/main/references/prove.md
+\begin{frame}{Example: Prove2Me and Fermat's Last Theorem}
+    \begin{itemize}
+        \item \textbf{Prove2Me} supported the Claude-agent project that formalized
+              Fermat's Last Theorem in Lean.
+        \item Agents can communicate with the remote platform through ordinary
+              \textbf{HTTP requests and JSON responses}, using tools such as \texttt{curl}.
+        \item Write and compile a proof locally, submit it for remote checking,
+              then use the returned verdict and errors to revise it.
+    \end{itemize}
+    \begin{block}{A Simple Remote Verification Loop}
+        \small
+        \texttt{POST /api/v1/verify}: upload \texttt{solution.lean}; receive a submission ID.\\[5pt]
+        \texttt{GET /api/v1/verify?submission\_id=...}: poll for the verdict and errors.
+    \end{block}
+    \begin{itemize}
+        \item The platform tracks subtheorem dependencies so agents can work
+              on separate parts of a large proof.
+        \item \textbf{Takeaway:} a simple request--response interface can connect
+              capable agents to a large-scale formal verification workflow.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Clarity of AI-Generated Explanations}
+    \begin{itemize}
+        \item Despite its capabilities, AI still requires human guidance.
+        \item Clear, comprehensible explanations are essential for effective human oversight.
+        \item AI systems tend to produce lengthy responses.
+        \item My most frequent instruction is: ``Please shorten your response while preserving precision and clarity.''
+        \item AI models should communicate their results in language that users can readily understand.
+    \end{itemize}
+\end{frame}
+
+\section{Auto-Specifying Dalek}
+\subsection{Practice}
+
 % Based on auto_verify_dalek/docs/METHOD.md and
 % harness/prove_top_spec.py / harness/dynamic_proof.py.
 % Illustrative dependency chain, not a claim that this target is completed.
 \begin{frame}{Auto-Specifying Dalek: Bottom-Up Proofs}
     \small
-    \textbf{1. Human provides and fixes the public API specification.}\\
-    Implementation code stays fixed; AI writes internal specifications and proofs.
+    \textbf{1. A human defines the public API specification, which remains fixed.}\\
+    The implementation remains unchanged; AI writes internal specifications and proofs.
     \begin{center}
     \begin{tikzpicture}[
         contract/.style={draw=MediumBlue,rounded corners=3pt,align=center,
@@ -548,7 +738,7 @@ axiom libcrux_hmac.hmac_sha256_tag32_spec ...
     \footnotesize
     \textbf{Arrows:} proved dependencies support the caller above; continue from the leaves to the API.\\
     \textbf{Feedback:} if an internal spec is too weak, revise it and recheck affected proofs.\\
-    \textbf{Final check:} Lean proofs and project gates pass; the supplied API statement stays unchanged.
+    \textbf{Final check:} Lean proofs and project checks pass; the supplied API statement remains unchanged.
 \end{frame}
 
 % Conceptual round design requested for this talk: fresh context every round.
@@ -582,7 +772,7 @@ axiom libcrux_hmac.hmac_sha256_tag32_spec ...
         \draw[flow] (reset) -- (select);
     \end{tikzpicture}
     \end{center}
-    \begin{block}{Progress Lives in Files, Beyond the Conversation}
+    \begin{block}{Preserving Progress Across Sessions}
         \footnotesize
         Each round starts fresh, but retains the fixed API goal, code, dependency graph,
         and concise summaries. Repeat until the API proof and final checks pass.
@@ -591,79 +781,25 @@ axiom libcrux_hmac.hmac_sha256_tag32_spec ...
     Round design shown here: reset after every summary. The harness also supports session continuation.
 \end{frame}
 
-\section{Lessons from Practice}
+\subsection{Lessons}
 
-\begin{frame}{Lessons from Practice}
-    \begin{itemize}
-        \item AI capabilities in constructing Lean proofs have improved substantially.
-        \item Simple prompts appear sufficient in most cases.
-        \item The clarity of AI-generated explanations has become a key bottleneck.
-        % Ask the AI to simplify its explanations.
-        \item A simple design is sufficient for the agent harness.
-        \item Cross-model review is crucial when writing specifications.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{Advances in AI-Assisted Lean Proofs}
-    \begin{itemize}
-        \item One year ago, AI struggled to construct challenging proofs.
-        \item At that time, proofs involving loop invariants were beyond its capabilities in my experience.
-        \item In my recent work, I have not encountered a proof that AI could not complete.
-        \item In most cases, the specifications written by AI is correct.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{Simple Prompts Often Suffice}
-    \begin{itemize}
-        \item One year ago, Claude Code skills were developed to guide AI workflows.
-        \item These skills use Markdown documents to provide instructions to AI agents.
-        \item The Model Context Protocol (MCP) provides an additional mechanism for tool integration.
-        \item Examples include Lean 4 skills and Lean MCP integrations.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{Simple Prompts Often Suffice}
-    \begin{itemize}
-        \item Current AI systems appear substantially more capable.
-        \item I examined how Claude Code operates in my Lean workflow.
-        \item In the sessions I examined, it used neither skills nor MCP tools to construct Lean proofs.
-        \item Why might MCP tools be unnecessary in this workflow?
-        \item MCP tools can expose the tree structure of proofs.
-        \item However, this view may omit global information, such as the number of remaining \texttt{sorry} placeholders.
-        \item Given current AI capabilities in Lean, elaborate prompts appear to offer limited additional benefit.
-        \item The most useful instruction appears to be: ``Decompose the proof and compile after each completed step.''
-        \item Claude Code skills appear less useful in this workflow than they once were.
-    \end{itemize}
-\end{frame}
-
-
-\begin{frame}{Clarity of AI-Generated Explanations}
-    \begin{itemize}
-        \item Despite its capabilities, AI still requires human guidance.
-        \item Clear, comprehensible explanations are essential for effective human oversight.
-        \item AI systems tend to produce lengthy responses.
-        \item My most frequent instruction is: ``Please shorten your response while preserving precision and clarity.''
-        \item AI models should communicate their results in language that users can readily understand.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{A Simple Harness Design Is Sufficient}
+\begin{frame}{A Simple Harness Can Be Effective}
     \begin{itemize}
         \item Use a simple workflow to coordinate proof development.
         \item Assign a central agent to determine which proof node to expand next.
         \item Determine which proof nodes can be addressed within the current iteration.
         \item Record progress after each iteration.
-        \item Reset the working context periodically to prevent excessive accumulation.
+        \item Reset the working context periodically, retaining concise progress summaries.
     \end{itemize}
 
 \end{frame}
 
-\begin{frame}{A Simple Harness Design Is Sufficient}
+\begin{frame}{Decompose Difficult Proofs and Check Incrementally}
     \begin{itemize}
-        \item Initially, I was unable to complete the proof.
+        \item Initial attempts to prove \texttt{to\_bytes} were unsuccessful.
         \item The \texttt{to\_bytes} implementation exceeds 700 lines of code, and proof attempts frequently time out.
-        \item The only effective workflow I found was to decompose complex theorems into simpler lemmas.
-        \item Compile after each incremental improvement.
+        \item The key improvement was to decompose complex theorems into simpler lemmas.
+        \item Make a small change, then check it with Lean.
     \end{itemize}
 \end{frame}
 
@@ -674,7 +810,8 @@ axiom libcrux_hmac.hmac_sha256_tag32_spec ...
 \item Complement manual review with independent reviews by different AI models.
 \item This approach is particularly useful for less critical specifications.
 \item Examples include helper lemmas and functions outside the public API.
-\item Cross-model review is a practical approach to checking these specifications.
+\item In my experience, having different AI models independently check the same
+      specification is highly effective at finding errors and omissions.
 \end{itemize}
 
 \end{frame}
@@ -684,18 +821,105 @@ axiom libcrux_hmac.hmac_sha256_tag32_spec ...
 \section{Prospects}
 %------------------------------------------------
 
-\begin{frame}{Prospects: Important Directions of AI for formal verification}
+\begin{frame}{Future Directions for AI-Assisted Formal Verification}
     \begin{itemize}
-        \item Efficient Inference
-        \item Understandable Formal verification
+        \item Efficient inference.
+        \item Understandable formal verification.
     \end{itemize}
 \end{frame}
 
+
+\begin{frame}{Why Efficient Inference Matters}
+    \begin{itemize}
+        \item AI can now automate substantial parts of proof development and program verification.
+        \item Long proof searches can require substantial token usage and computation.
+        \item For practical adoption, verification costs must be justified by the value of the assurance gained.
+        \item Reducing inference costs makes verification feasible for more software projects.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{How to Improve Efficiency?}
+    \small
+    \begin{itemize}
+        \item \textbf{Specialized small models and efficient inference}
+        \begin{itemize}
+            \item Vision already benefits from compact architectures, distillation,
+                  pruning, and quantization.
+            % MobileNets, Table 4: https://arxiv.org/abs/1704.04861
+            \item \textbf{MobileNet:} 4,866M $\to$ 569M multiply-adds
+                  (\textbf{88\% less computation}); ImageNet accuracy 71.7\% $\to$ 70.6\%.
+            % LCM: https://arxiv.org/abs/2310.04378
+            % \item \textbf{Image generation:} LCM distillation enables high-quality
+            %       images in just \textbf{2--4 denoising steps}.
+            % \item \textbf{Quantization:} FP32 $\to$ INT8 gives \textbf{4$\times$ smaller
+            %       weight storage} before metadata; speed depends on hardware.
+        \end{itemize}
+        \item \textbf{Opportunity for math and code:} apply these ideas to specialized
+              proof/code models; optimize \textbf{cost per verified solution}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{How to Improve Efficiency?}
+    \begin{itemize}
+        \item \textbf{Better verification frameworks}
+        \begin{itemize}
+            \item Decompose a goal into small subgoals.
+            \item Let automated theorem provers solve routine subgoals.
+            \item Improve the translation from Rust to Lean.
+            \begin{itemize}
+                \item Generate Lean functions that express Rust semantics clearly.
+                \item Structure the translated code to simplify proof obligations.
+            \end{itemize}
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Understandable Formal Verification}
+    \begin{itemize}
+        \item AI can generate proofs faster than people can read them.
+        \item A checked proof still needs a clear explanation of its main ideas.
+    \end{itemize}
+    \medskip
+    \centering
+    {\small\textbf{Terence Tao, August 2026}\par}
+    \smallskip
+    \href{https://arxiv.org/abs/2608.16753}{\includegraphics[width=0.55\textwidth]{img/tao-mathematics-ai-title.png}}
+    \medskip
+
+    \href{https://arxiv.org/pdf/2608.16753}{\includegraphics[width=0.70\textwidth]{img/tao-proof-exposition.png}}
+    \smallskip
+
+    {\small Proof explanations are essential for human understanding.\par}
+\end{frame}
+
+
+\begin{frame}{Understandable Formal Verification}
+    \begin{itemize}
+        \item Use proof assistants with \textbf{Controlled Natural Language (CNL)}.
+        \item CNL resembles mathematical English, with restricted grammar
+              and precise formal meaning.
+        \item The system translates proof steps into logical obligations;
+              automated provers check them.
+    \end{itemize}
+    \begin{block}{Illustrative CNL Sentences and Their Logical Meaning}
+        \small
+        \begin{tabular}{@{}ll@{}}
+            Every prime number is greater than one.
+                & $\forall p\in\mathbb{N},\;\mathrm{Prime}(p)\Rightarrow p>1$ \\
+            There exists an even prime number.
+                & $\exists p\in\mathbb{N},\;\mathrm{Prime}(p)\land\mathrm{Even}(p)$
+        \end{tabular}
+    \end{block}
+    \begin{itemize}
+        \item \textbf{Examples:} Naproche and Visored.
+        \item \textbf{Key idea:} human-readable proofs with machine-checkable structure.
+    \end{itemize}
+\end{frame}
 %------------------------------------------------
 
 \begin{frame}
     \centering
-    {\Huge\textbf{We are hiring}\par}
+    {\Huge\textbf{We Are Hiring}\par}
     \medskip
     {\large Beneficial AI Foundation\par}
     \bigskip
