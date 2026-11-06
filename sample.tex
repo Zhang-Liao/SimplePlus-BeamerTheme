@@ -558,11 +558,42 @@ st.sending_ct1.idx.val = 1 (*@$\land$@*)
     % code satisfying the models or contracts used in Lean.
 \end{frame}
 
+% Concrete translation patches: AeneasVerif/aeneas PRs #1423, #1425, #1426.
+% https://github.com/AeneasVerif/aeneas/pull/1423
+% https://github.com/AeneasVerif/aeneas/pull/1425
+% https://github.com/AeneasVerif/aeneas/pull/1426
+\begin{frame}{Extending Aeneas: Supporting More Rust Patterns}
+    \small
+    \textbf{Extend the translator so more Rust code can be represented in Lean.}
+    \begin{itemize}
+        \item \textbf{Enums with negative values}
+        \begin{itemize}
+            \item Rust enums can use values such as $-1$ for an error status.
+            \item Extend Lean's enum-value annotation to accept signed negative values.
+        \end{itemize}
+        \item \textbf{Associated constants that refer to \texttt{Self}}
+        \begin{itemize}
+            \item Example: \texttt{const MASK: u32 = 1 << Self::BITS;}
+            \item Fix generated definitions so the referenced trait constants are available.
+        \end{itemize}
+        \item \textbf{Static references in function and trait-method signatures}
+        \begin{itemize}
+            \item Example: a function returning \texttt{\&'static str}.
+            \item Extend lifetime handling so supported calls and reborrows translate.
+        \end{itemize}
+    \end{itemize}
+    \medskip
+    \footnotesize
+    \textbf{Validation:} regression examples exercise Rust translation and the generated Lean code.\\[3pt]
+    \textbf{Status:} implemented patches proposed upstream; these PRs are not yet merged.
+\end{frame}
+
 % SrcTranslated/FunsExternal.lean: Vec default model and proof; names shortened below.
 \begin{frame}[fragile]{SPQR: Modeling External Functions in Lean}
+ Sometimes we do not want to wait for the updating of Aeneas.
     \footnotesize
     \lstset{basicstyle=\ttfamily\fontsize{8}{9}\selectfont}
-    \begin{block}{Route 1: Write a Lean Model and Prove Its Specification}
+    \begin{block}{Write a Lean Model and Prove Its Specification}
         Example from the external models: \texttt{Vec::default} (names shortened).
 \begin{lstlisting}[escapeinside={(*@}{@*)}]
 def vec_default (T : Type) : Result (alloc.vec.Vec T) :=
@@ -573,10 +604,6 @@ theorem vec_default_spec (T : Type) :
   simp [vec_default, alloc.vec.Vec.new]
 \end{lstlisting}
         The spec is proved from a body. Matching that model to Rust remains an obligation.
-    \end{block}
-    \begin{block}{Route 2: Extend Translation Support}
-        Improve Charon/Aeneas support for the unsupported Rust features, then translate
-        the implementation and prove its specification from the translated body.
     \end{block}
     % \textbf{Current Protobuf interface:} \texttt{encode\_state\_pb} uses
     % \texttt{opaque + axiom}; its behavior is assumed, not proved from a Lean model.
