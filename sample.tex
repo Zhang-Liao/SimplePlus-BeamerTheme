@@ -41,7 +41,8 @@
 %	TITLE PAGE
 %----------------------------------------------------------------------------------------
 
-\title[AI Meets Formal Verification]{AI Meets Formal Verification: Practice and Prospects} % The short title appears at the bottom of every slide, the full title is only on the title page
+\title[AI Meets Formal Verification]{AI Meets Formal Verification
+\\ Practice and Prospects} % The short title appears at the bottom of every slide, the full title is only on the title page
 % \subtitle{Subtitle}
 
 \author[Pin-Yen] {Liao Zhang}
@@ -272,6 +273,7 @@
 
 % Actual example: src/util.rs; SrcTranslated/Funs.lean (util.compare);
 % Spqr/Specs/Util/Compare.lean. Translation excerpts shorten namespaces.
+% Do not talk about details
 \begin{frame}[fragile]{SPQR Example: A Byte Comparison Loop}
     \lstset{basicstyle=\ttfamily\fontsize{7}{8}\selectfont}
     \small
@@ -313,14 +315,15 @@ ok (cont (iter1, r1))
         \end{column}
     \end{columns}
     \footnotesize
+    \textbf{Translation is more than a syntax change:} loops need helper functions.
     \begin{tabular}{@{}p{0.27\textwidth}p{0.68\textwidth}@{}}
-        \textbf{Rust construct} & \textbf{Lean representation} \\\midrule
-        \texttt{\&[u8]} & \texttt{Slice U8}: a borrowed byte slice becomes a value. \\
-        \texttt{let mut r}; \texttt{for} & \texttt{loop} threads state \texttt{(iter, r)}; \texttt{cont} continues, \texttt{done} exits. \\
-        \texttt{lhs[i]} & \texttt{Slice.index\_usize}: a checked access in \texttt{Result}; failure propagates. \\
+        \texttt{u8}; \texttt{\&[u8]} & \texttt{U8}; \texttt{Slice U8} (bytes and byte slices). \\
+        \texttt{lhs[i]} & \texttt{Slice.index\_usize lhs i} (array access with a bounds check). \\
+        \texttt{for} loop & A helper, \texttt{compare\_loop}, passes updated values to the next iteration. \\
     \end{tabular}
 \end{frame}
 
+% Focused on meaning of the spec
 \begin{frame}[fragile]{SPQR Example: Specification and Proof}
     \lstset{basicstyle=\ttfamily\fontsize{7}{8}\selectfont}
     \begin{block}{Specification and Top-Level Proof (\texttt{compare\_spec})}
@@ -358,6 +361,10 @@ theorem compare_spec (lhs rhs : Slice U8)
 
 % Actual declaration: Spqr/Specs/V1/Chunked/SendCt/HeaderReceived/SendCt1Chunk.lean:116--176.
 % All hypotheses and postconditions retained; comments omitted; two namespaces abbreviated.
+% Why we review. Review OpenAI's math. Lean corresponds to informal
+% How spec guarantee the correctness of the func
+% Lean is difficult to understand
+
 \begin{frame}[fragile]{SPQR: Reviewing Long Specifications}
     \small
     \textbf{\texttt{send\_ct1\_chunk\_spec}: 61 source lines before the proof begins.}\\
@@ -512,6 +519,7 @@ st.sending_ct1.idx.val = 1 (*@$\land$@*)
 \end{frame}
 
 % Cargo.toml [package.metadata.charon], translation-patches/lib-state_pb.patch.
+% Fix it
 \begin{frame}{SPQR: Code Outside the Translation}
     \small
     \textbf{Example: serializing the ratchet state with Protobuf (\texttt{prost}).}
@@ -562,32 +570,33 @@ theorem vec_default_spec (T : Type) :
     % \texttt{opaque + axiom}; its behavior is assumed, not proved from a Lean model.
 \end{frame}
 
-% SrcTranslated/FunsExternal.lean: libcrux_hmac.hmac_sha256_tag32_spec.
 \begin{frame}[fragile]{SPQR: Reviewing External Assumptions}
     \footnotesize
-    \begin{block}{An External Declaration Only Gives the Type}
+    \lstset{basicstyle=\ttfamily\fontsize{8}{9}\selectfont}
+    \textbf{Why use an axiom?} \texttt{hkdf\_to\_slice} calls the external Rust \texttt{hkdf} library.
+    We keep verification of the full library and its dependencies outside our scope,
+    and assume the contract needed by caller proofs.
+    \begin{block}{Example: HKDF as an Opaque External Function}
 \begin{lstlisting}
-noncomputable opaque libcrux_hmac.hmac : ...
+noncomputable opaque hkdf_to_slice :
+  Slice U8 -> Slice U8 -> Slice U8 -> Slice U8 -> Result (Slice U8)
 \end{lstlisting}
-        \texttt{Result (Vec U8)} allows failure or any output length;
-        it does not guarantee success or 32 bytes.
+        Inputs: salt, key material, context, and output buffer. The type alone gives no output guarantee.
     \end{block}
-    \begin{block}{An Axiom Supplies the Missing Contract}
-\begin{lstlisting}
-axiom libcrux_hmac.hmac_sha256_tag32_spec ...
+    \begin{block}{The Input--Output Contract: \texttt{hkdf\_to\_slice\_spec}}
+\begin{lstlisting}[escapeinside={(*@}{@*)}]
+axiom hkdf_to_slice_spec (salt ikm info okm : Slice U8)
+    (h : okm.length (*@$\leq$@*) 255 * 32) :
+  hkdf_to_slice salt ikm info okm (*@$\lbrace\!\lbrace$@*) (out : Slice U8) =>
+    out.val = hkdf salt.val ikm.val info.val okm.length (*@$\rbrace\!\rbrace$@*)
 \end{lstlisting}
-        If key and data lengths are $\leq$ \texttt{u32::MAX}, the SHA-256 call
-        requesting 32 bytes succeeds and returns 32 bytes.
-        Caller proofs use this guarantee. (Signatures shortened.)
+        If \texttt{okm.length} $\leq 8160$, the call succeeds with the specified HKDF-SHA256 bytes.
     \end{block}
-    \textbf{Why an axiom?} No translated implementation or Lean body is available
-    to prove this contract.\\[2pt]
-    \textbf{Why do not we write a Lean model:} sometimes proof is challenging and requires to write many definitions.
-    We want faster progress. \\[2pt]
-    \textbf{Review is challenging} 
+    \textbf{Trust boundary:} Caller proofs rely on this axiom. They assume the external
+    library agrees with \texttt{crypto.hkdf}, without verifying the library implementation.
 \end{frame}
 
-\begin{frame}{Dalek: What It Does and What We Verify}
+\begin{frame}{Dalek Elliptic Curve: What We Verify}
     \small
     \begin{itemize}
         \item \textbf{What is it?} \texttt{curve25519-dalek} is a Rust library for group operations on Curve25519 (Edwards and Montgomery forms) and Ristretto.
@@ -798,69 +807,71 @@ axiom libcrux_hmac.hmac_sha256_tag32_spec ...
 % Proof: ledger/transcripts/.proof-state-dag_scalar_invert_dynamic_01_32-8d43bea2-b4af-4a1c-809e-b828caf40bb0/
 % round-1-draft/files/Curve25519Dalek/Specs/Scalar/Scalar/Invert.lean.
 \begin{frame}[fragile]{Auto-Specifying Dalek: Scalar Inversion Proved}
-    \small
-    \textbf{Fixed API guarantee:} for input $x \not\equiv 0 \pmod{\ell}$,
-    \texttt{Scalar.invert} succeeds and returns $y$ with $xy \equiv 1 \pmod{\ell}$.
-    {\footnotesize Here $x,y$ decode the scalar bytes; $\ell$ is the scalar modulus.}
-    \begin{columns}[T,onlytextwidth]
-        \begin{column}{0.63\textwidth}
-            \begin{block}{The Final Top-Level Proof}
-\begin{lstlisting}[basicstyle=\ttfamily\fontsize{7}{8}\selectfont,escapeinside={(*@}{@*)}]
-  unfold invert
-  progress as (*@$\langle$@*)s, hs, hsb(*@$\rangle$@*)
-  progress as (*@$\langle$@*)r, hrb, hrL, _hpow, hinv(*@$\rangle$@*)
-  progress as (*@$\langle$@*)p, _hp1, hp(*@$\rangle$@*)
-  have hL : _root_.L < 2 ^ 256 := by
-    unfold _root_.L; norm_num
-  rw [hp (by omega), (*@$\leftarrow$@*) hs]
-  exact hinv (by rw [hs]; exact h)
-\end{lstlisting}
-            \end{block}
-        \end{column}
-        \begin{column}{0.34\textwidth}
-            \begin{block}{What the Three Steps Use}
-                \footnotesize
-                \textbf{Unpack:} bytes to limbs.\\[4pt]
-                \textbf{Invert:} apply the internal modular-inverse guarantee.\\[4pt]
-                \textbf{Pack:} limbs back to bytes.
-            \end{block}
-        \end{column}
-    \end{columns}
-    \medskip
     \footnotesize
-    \textbf{Completed run:} 31 proof nodes: 30 internal nodes + the fixed API spec.\\[3pt]
-    \textbf{Validation:} original top-level statement preserved;
-    no \texttt{sorry} dependencies in the final proof.
+    \textbf{What does \texttt{Scalar.invert} do?}
+        It computes the \textbf{multiplicative inverse modulo $\ell$}
+        of a scalar stored as 32 bytes: $y = x^{-1} \pmod{\ell}$.
+        This enables division in scalar arithmetic.
+        \\[3pt]
+        \textbf{Small example (modulo 7):} the inverse of 3 is 5,
+        because $3 \cdot 5 = 15 \equiv 1 \pmod{7}$.
+    \begin{block}{What Does the Specification Say?}
+\begin{lstlisting}[basicstyle=\ttfamily\fontsize{7}{8}\selectfont,escapeinside={(*@}{@*)}]
+theorem invert_spec (self : Scalar)
+    (h : U8x32_as_Nat self.bytes % L (*@$\neq$@*) 0) :
+  invert self (*@$\lbrace\!\lbrace$@*) (result : Scalar) =>
+    U8x32_as_Nat self.bytes * U8x32_as_Nat result.bytes
+      (*@$\equiv$@*) 1 [MOD L] (*@$\rbrace\!\rbrace$@*)
+\end{lstlisting}
+        \textbf{Decode:} \texttt{U8x32\_as\_Nat} reads the bytes as a little-endian natural number;
+        \texttt{L} denotes $\ell$.\\[2pt]
+        \textbf{Precondition:} the input is nonzero modulo $\ell$.\\[2pt]
+        \textbf{Guarantee:} the call succeeds, and the decoded input and output satisfy
+        $xy \equiv 1 \pmod{\ell}$. The spec makes no claim for zero input.
+    \end{block}
+    % \textbf{Proof structure:} unpack bytes into limbs $\to$ invert $\to$ pack back into bytes.\\[3pt]
+    \textbf{Completed run:} 31 proof nodes; fixed API spec preserved, no \texttt{sorry} dependencies.
 \end{frame}
 
 % Illustrative checkpoint using the actual Scalar52.invert proof dependencies.
 % Scheduling and gates: auto_verify_dalek/harness/dynamic_proof.py and driver.py.
 \begin{frame}{Harness Example: Select a Node and Prove It}
     \footnotesize
-    \textbf{Target:} \texttt{Scalar.invert\_spec}. Example checkpoint; selected dependencies shown.
+    \textbf{Proof dependencies:} each node represents a function's spec.
+    Arrows point from a prerequisite to the proof that uses it.
     \begin{center}
-    \begin{tabular}{@{}lll@{}}
-        \toprule
-        Node & Status & Scheduling decision \\
-        \midrule
-        \texttt{as\_montgomery\_spec} & Accepted & Reuse its guarantee \\
-        \texttt{montgomery\_invert\_spec} & Accepted & Reuse its guarantee \\
-        \texttt{from\_montgomery\_spec} & Accepted & Reuse its guarantee \\
-        \texttt{Scalar52.invert\_spec} & Pending & \textbf{Ready: select this node} \\
-        \texttt{Scalar.invert\_spec} & Pending & Wait for internal inversion \\
-        \bottomrule
-    \end{tabular}
+    \begin{tikzpicture}[
+        dep/.style={draw=MediumBlue,rounded corners=3pt,align=center,
+            text width=3.4cm,minimum height=0.85cm,inner sep=5pt,font=\footnotesize},
+        accepted/.style={dep,fill=InvisibleGreen},
+        ready/.style={dep,fill=InvisibleBlue,line width=1.5pt},
+        waiting/.style={dep,fill=black!5,draw=black!45},
+        flow/.style={-{Stealth[length=2mm]},thick,MediumBlue}]
+        \node[accepted] (as) at (0,1.2)
+            {\texttt{as\_montgomery}\\\textbf{Accepted}};
+        \node[accepted] (mi) at (0,0)
+            {\texttt{montgomery\_invert}\\\textbf{Accepted}};
+        \node[accepted] (from) at (0,-1.2)
+            {\texttt{from\_montgomery}\\\textbf{Accepted}};
+        \node[ready] (inner) at (4.7,0)
+            {\texttt{Scalar52.invert}\\\textbf{Ready: select next}};
+        \node[waiting] (outer) at (9.4,0)
+            {\texttt{Scalar.invert}\\\textbf{Waiting}};
+        \draw[flow] (as.east) -- (inner.north west);
+        \draw[flow] (mi.east) -- (inner.west);
+        \draw[flow] (from.east) -- (inner.south west);
+        \draw[flow] (inner.east) -- (outer.west);
+        \node[align=center,font=\scriptsize,text width=3.6cm] at (9.4,-1.2)
+            {Also needs unpack / pack\\specs (omitted).};
+    \end{tikzpicture}
     \end{center}
-    \textbf{Selection rule:} choose a pending node only when all its dependencies are accepted.
-    \begin{block}{Inside the Selected Node's Proof}
-        \begin{enumerate}
-            \item Specify limb bounds, $r<\ell$, and $r \equiv x^{\ell-2} \pmod{\ell}$.
-            \item Unfold; use \texttt{progress} for the three accepted specs above.
-            \item Prove the Montgomery round trip; for $x \not\equiv 0 \pmod{\ell}$,
-                  use Fermat to derive $xr \equiv 1 \pmod{\ell}$.
-        \end{enumerate}
-    \end{block}
-    \textbf{Check incrementally:} compile each helper, then the node; submit to the gate.
+    \textbf{Selection rule:} ask AI to select a node, usually a pending node whose all dependencies are accepted.
+    \medskip
+
+    % \textbf{Prove:} reuse accepted specs via \texttt{progress}; establish the Montgomery
+    % round trip and use Fermat to obtain $xr \equiv 1 \pmod{\ell}$.\\[3pt]
+    \textbf{Unlock:} compile and pass the gate; the caller can then use this spec.\\[3pt]
+    \scriptsize Illustrative checkpoint; selected dependencies shown.
 \end{frame}
 
 \begin{frame}{Harness Example: What Makes the Gate Accept?}
@@ -956,18 +967,26 @@ axiom libcrux_hmac.hmac_sha256_tag32_spec ...
               proof/code models; optimize \textbf{cost per verified solution}.
     \end{itemize}
 \end{frame}
-
+% TODO: qcp smt and monadic framework
 \begin{frame}{How to Improve Efficiency?}
+    \small
+    \textbf{Better verification frameworks}
     \begin{itemize}
-        \item \textbf{Better verification frameworks}
+        % \item \textbf{Decompose verification goals}
+        \item \textbf{Automate routine reasoning}
         \begin{itemize}
-            \item Decompose a goal into small subgoals.
+            \item Break a large goal into small, manageable subgoals.
             \item Let automated theorem provers solve routine subgoals.
-            \item Improve the translation from Rust to Lean.
+            \item Use SMT solvers for suitable goals instead of handling every goal directly in Lean.
+        \end{itemize}
+        \item \textbf{Improve the translation from Rust to Lean}
+        \begin{itemize}
+            \item How do tools like Aeneas represent Rust functions?
             \begin{itemize}
                 \item Generate Lean functions that express Rust semantics clearly.
                 \item Structure the translated code to simplify proof obligations.
             \end{itemize}
+            \item Better representations make proofs easier.
         \end{itemize}
     \end{itemize}
 \end{frame}
@@ -990,6 +1009,7 @@ axiom libcrux_hmac.hmac_sha256_tag32_spec ...
     {\small Proof explanations are essential for human understanding.\par}
 \end{frame}
 
+% add a figure to remind people lean is difficult to understand
 
 \begin{frame}{Understandable Formal Verification}
     \begin{itemize}
@@ -1013,6 +1033,7 @@ axiom libcrux_hmac.hmac_sha256_tag32_spec ...
         \item \textbf{Key idea:} human-readable proofs with machine-checkable structure.
     \end{itemize}
 \end{frame}
+% TODO: use AI to make proofs understandable
 %------------------------------------------------
 
 \begin{frame}
