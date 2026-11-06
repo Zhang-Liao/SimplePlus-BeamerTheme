@@ -678,32 +678,73 @@ axiom hkdf_to_slice_spec (salt ikm info okm : Slice U8)
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Simple Prompts Often Suffice}
-    \begin{itemize}
-        % \item One year ago, Claude Code skills were developed to guide AI workflows.
-        % \item These skills use Markdown documents to provide instructions to AI agents.
-        \item \textbf{MCP (Model Context Protocol)} is an open standard for connecting
-              AI applications to external tools and data.
-        \item An MCP server exposes tools that an AI agent can discover and call,
-              then returns their results to the agent.
-        \item \textbf{Lean MCP integrations}, such as \texttt{lean-lsp-mcp},
-              connect the agent to Lean's language server and search tools:
+\begin{frame}{What Are MCP and Lean MCP?}
+    \small
+    \begin{block}{MCP: Model Context Protocol}
+        A standard protocol that lets AI applications discover and call external tools.\\[3pt]
+        An MCP server exposes tools; the AI agent requests an operation and receives its result.
+    \end{block}
+    \begin{block}{Lean MCP: Connecting an AI Agent to Lean}
+        A server such as \texttt{lean-lsp-mcp} exposes Lean-related tools to the agent:
         \begin{itemize}
-            \item Inspect the current proof goal and local hypotheses.
-            \item Read compiler errors, warnings, types, and documentation.
-            \item Search for relevant lemmas and definitions.
-            \item Try tactics or code snippets and inspect Lean's feedback.
+            \item Query goals and local hypotheses at a source-code position.
+            \item Read diagnostics, types, and documentation.
+            \item Search for lemmas and try proof steps.
         \end{itemize}
-        \item \textbf{Workflow:} inspect a goal $\to$ propose a proof step
-              $\to$ check with Lean $\to$ revise using feedback.
-    \end{itemize}
+    \end{block}
+    \begin{center}
+    \begin{tikzpicture}[
+        box/.style={draw=MediumBlue,fill=InvisibleBlue,rounded corners=3pt,
+            text width=3cm,minimum height=0.75cm,align=center,font=\footnotesize},
+        flow/.style={<->,>=Stealth,thick,MediumBlue}]
+        \node[box] (agent) {\textbf{AI agent}};
+        \node[box,right=1.3cm of agent] (mcp) {\textbf{Lean MCP server}};
+        \node[box,right=1.3cm of mcp] (lean) {\textbf{Lean language server}\\and other Lean tools};
+        \draw[flow] (agent) -- (mcp);
+        \draw[flow] (mcp) -- (lean);
+    \end{tikzpicture}
+    \end{center}
+    \footnotesize
+    \textbf{Roles:} the agent proposes a proof, MCP provides tool access,
+    and Lean checks the proof.
+\end{frame}
+
+% lean-lsp-mcp docs/tools.md: lean_goal; Lean tactic reference: trace_state.
+\begin{frame}{Simple Prompts Often Suffice}
+    \small
+    \textbf{How does the agent get feedback from Lean?}
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{With Lean MCP}
+                \begin{itemize}
+                    \item Query the proof state at a given file, line, and column.
+                    \item Inspect local hypotheses and remaining goals directly.
+                    \item Access diagnostics and try proof steps through tools.
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{With File Access and Compilation}
+                \begin{itemize}
+                    \item Edit the proof, run Lean, and read its output.
+                    \item Unsolved-goal errors show the remaining proof obligations.
+                    \item Insert \texttt{trace\_state} to inspect an intermediate state.
+                \end{itemize}
+            \end{block}
+        \end{column}
+    \end{columns}
+    \medskip
+    \textbf{The distinction:} direct queries at a source location versus feedback
+    obtained by editing and compiling. Both can expose proof states.\\[6pt]
+    \textbf{My observation:} file access and compilation were sufficient in the
+    sessions I examined. Lean MCP makes inspection more convenient, but was not required.
 \end{frame}
 
 \begin{frame}{Simple Prompts Often Suffice}
     \begin{itemize}
         \item Recent improvements in AI capabilities have simplified my proof workflow.
         \item I examined Claude Code's behavior during Lean proof development.
-        \item In the sessions I examined, it used neither skills nor MCP tools to construct Lean proofs.
+        \item In the sessions I examined, it did not use MCP tools to construct Lean proofs.
         \item Direct file access and compilation were sufficient in these sessions.
         \item Structured proof views can help inspect individual goals.
         \item I also need project-wide information, such as the number of remaining \texttt{sorry} placeholders.
@@ -717,25 +758,28 @@ axiom hkdf_to_slice_spec (salt ikm info okm : Slice U8)
 % https://www.anthropic.com/research/formalizing-fermats-last-theorem
 % https://github.com/prove2me/prove2me_workspace/blob/main/references/prove.md
 \begin{frame}{Example: Prove2Me and Fermat's Last Theorem}
-    \begin{itemize}
-        \item \textbf{Prove2Me} supported the Claude-agent project that formalized
-              Fermat's Last Theorem in Lean.
-        \item Agents can communicate with the remote platform through ordinary
-              \textbf{HTTP requests and JSON responses}, using tools such as \texttt{curl}.
-        \item Write and compile a proof locally, submit it for remote checking,
-              then use the returned verdict and errors to revise it.
-    \end{itemize}
-    \begin{block}{A Simple Remote Verification Loop}
-        \small
-        \texttt{POST /api/v1/verify}: upload \texttt{solution.lean}; receive a submission ID.\\[5pt]
-        \texttt{GET /api/v1/verify?submission\_id=...}: poll for the verdict and errors.
+    \small
+    \textbf{Prove2Me} supported the Claude-agent project that formalized
+    Fermat's Last Theorem in Lean.
+    \begin{block}{Connecting to the Remote Server: Documentation + HTTP}
+        The documented workflow requires \textbf{no MCP connection}.
+        A Markdown guide tells the agent which HTTP requests to send,
+        what parameters to provide, and how to read the responses.\\[4pt]
+        The agent reads the guide and runs commands such as \texttt{curl}
+        to communicate with the remote server.
     \end{block}
-    \begin{itemize}
-        \item The platform tracks subtheorem dependencies so agents can work
-              on separate parts of a large proof.
-        \item \textbf{Takeaway:} a simple request--response interface can connect
-              capable agents to a large-scale formal verification workflow.
-    \end{itemize}
+    \begin{enumerate}
+        \item \textbf{Read the instructions:} \texttt{references/prove.md} provides
+              request examples and explains the returned status.
+        \item \textbf{POST a proof:} send \texttt{solution.lean} to
+              \texttt{/api/v1/verify}; receive a submission ID.
+        \item \textbf{GET the result:} query
+              \texttt{/api/v1/verify?submission\_id=...} for the verdict and errors.
+        \item \textbf{Revise and repeat:} use the feedback to update the proof.
+    \end{enumerate}
+    \medskip
+    \textbf{Takeaway:} a document explaining the API can be enough for an agent
+    with shell access to use a remote verification service.
 \end{frame}
 
 \begin{frame}{Cross-Model Review for Specification Writing}
@@ -768,9 +812,12 @@ axiom hkdf_to_slice_spec (salt ikm info okm : Slice U8)
 % harness/prove_top_spec.py / harness/dynamic_proof.py.
 % Illustrative dependency chain, not a claim that this target is completed.
 \begin{frame}{Auto-Specifying Dalek: Bottom-Up Proofs}
-    \small
-    \textbf{1. A human defines the public API specification, which remains fixed.}\\
-    The implementation remains unchanged; AI writes internal specifications and proofs.
+    \textbf{Why the public API matters:} it is the library interface used by callers.
+    \footnotesize
+
+    \textbf{1. A human fixes this contract.} AI may refine internal specs,
+    but cannot weaken the public guarantee to make the proof easier.
+    The implementation stays unchanged.
     \begin{center}
     \begin{tikzpicture}[
         contract/.style={draw=MediumBlue,rounded corners=3pt,align=center,
@@ -797,9 +844,8 @@ axiom hkdf_to_slice_spec (salt ikm info okm : Slice U8)
     \end{tikzpicture}
     \end{center}
     \footnotesize
-    \textbf{Arrows:} proved dependencies support the caller above; continue from the leaves to the API.\\
-    \textbf{Feedback:} if an internal spec is too weak, revise it and recheck affected proofs.\\
-    \textbf{Final check:} Lean proofs and project checks pass; the supplied API statement remains unchanged.
+    \textbf{Bottom-up:} internal proofs support the caller above; strengthen weak helper specs as needed.\\
+    \textbf{Success means:} proving the original public contract, not just isolated helper properties.
 \end{frame}
 
 % Conceptual round design requested for this talk: fresh context every round.
@@ -814,7 +860,8 @@ axiom hkdf_to_slice_spec (salt ikm info okm : Slice U8)
             text width=3.45cm,minimum height=1.2cm,inner sep=5pt,font=\footnotesize},
         flow/.style={-{Stealth[length=2.5mm]},thick,MediumBlue}]
         \node[stage,fill=InvisibleBlue] (select) at (0,0)
-            {\textbf{1. Select nodes}\\Read graph and summary;\\pick ready nodes};
+            {\textbf{1. Select nodes}\\Initially: public API spec
+            \\pick ready nodes};
         \node[stage,fill=InvisibleGreen] (work) at (4.6,0)
             {\textbf{2. Work on nodes}\\Write internal specs,\\lemmas, and proofs};
         \node[stage,fill=InvisibleGreen] (check) at (9.2,0)
